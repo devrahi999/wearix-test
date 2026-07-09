@@ -82,7 +82,7 @@ export default function OrderDetailsPage() {
             {order.items.map((item, idx) => (
               <div key={idx} className="flex gap-4 items-start p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
                 <div className="w-16 h-16 rounded-xl border bg-white overflow-hidden shrink-0 relative">
-                  <Image src={item.productImage || '/placeholder.png'} alt={item.productName} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
+                  <Image src={item.productImage || '/logo.png'} alt={item.productName} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900 line-clamp-1">{item.productName}</p>

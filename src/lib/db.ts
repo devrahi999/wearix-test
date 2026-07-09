@@ -97,6 +97,13 @@ export async function getUserOrders(userId: string) {
   return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Order));
 }
 
+export async function getOrderById(id: string) {
+  const docRef = doc(db, 'orders', id);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Order;
+}
+
 export async function getAllOrders() {
   const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
   const snapshot = await getDocs(q);

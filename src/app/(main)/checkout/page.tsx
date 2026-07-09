@@ -341,7 +341,7 @@ function CheckoutForm() {
               {items.map((item, idx) => (
                 <div key={idx} className="flex gap-4 items-start">
                   <div className="w-16 h-16 rounded-lg border bg-white overflow-hidden shrink-0 relative">
-                    <Image src={item.image || '/placeholder.png'} alt={item.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
+                    <Image src={item.image || '/logo.png'} alt={item.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>

@@ -1,66 +1,81 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Printer, Truck, Check, Mail, Phone, MapPin } from 'lucide-react';
+import { ArrowLeft, Save, Printer, Truck, Mail, Phone, MapPin, Loader2 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import { getOrderById, updateOrderStatus } from '@/lib/db';
+import type { Order } from '@/types/order';
+import toast from 'react-hot-toast';
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = (params.id as string) || '';
 
-  const [status, setStatus] = useState<'Placed' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled'>('Confirmed');
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  const [status, setStatus] = useState<Order['orderStatus']>('placed');
+  const [trackingLink, setTrackingLink] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  const mockOrder = useMemo(() => {
-    return {
-      id,
-      date: 'July 5, 2026',
-      customer: {
-        name: 'Rahim Uddin',
-        email: 'rahim.uddin@example.com',
-        phone: '01712345678',
-      },
-      shippingAddress: {
-        fullName: 'Rahim Uddin',
-        phone: '01712345678',
-        division: 'Dhaka',
-        district: 'Dhaka',
-        area: 'Dhanmondi',
-        addressLine: 'House 12, Road 4, Sector 3',
-      },
-      items: [
-        {
-          productName: 'Premium Cotton Oxford Shirt',
-          size: 'L',
-          price: 990,
-          quantity: 1,
-          productImage: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=200',
-        },
-        {
-          productName: 'Slim Fit Denim Jeans',
-          size: '32',
-          price: 1250,
-          quantity: 2,
-          productImage: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=200',
-        },
-      ],
-      subtotal: 1840,
-      discount: 300,
-      shippingFee: 0,
-      total: 1540,
-    };
+  useEffect(() => {
+    if (id) {
+      getOrderById(id).then((data) => {
+        if (data) {
+          setOrder(data);
+          setStatus(data.orderStatus || 'placed');
+        }
+        setLoading(false);
+      }).catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+    }
   }, [id]);
 
-  const handleUpdateStatus = () => {
+  const handleUpdateStatus = async () => {
+    if (!order) return;
     setUpdating(true);
-    setTimeout(() => {
+    
+    let message = `Your order status has been updated to ${status}.`;
+    if (status === 'shipped') {
+      message = 'Your order has been shipped and is on the way.';
+    } else if (status === 'delivered') {
+      message = 'Your order has been delivered successfully.';
+    } else if (status === 'cancelled') {
+      message = 'Your order has been cancelled.';
+    }
+
+    try {
+      await updateOrderStatus(id, status, message, trackingLink || undefined);
+      toast.success('Order status updated successfully');
+      setOrder({ ...order, orderStatus: status });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update order status');
+    } finally {
       setUpdating(false);
-      alert('Order status updated successfully!');
-    }, 1000);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-xl font-bold text-gray-800">Order not found</h2>
+        <Link href="/wxadmin/orders" className="text-blue-600 mt-2 block hover:underline">Go back to orders</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm max-w-4xl mx-auto space-y-6">
@@ -75,7 +90,7 @@ export default function AdminOrderDetailPage() {
           </Link>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Order ID: {id}</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Placed on {mockOrder.date}</p>
+            <p className="text-xs text-gray-400 mt-0.5">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
         <button
@@ -96,12 +111,12 @@ export default function AdminOrderDetailPage() {
               Customer Details
             </h3>
             <div className="text-xs sm:text-sm text-gray-600 space-y-2">
-              <p className="font-bold text-gray-900">{mockOrder.customer.name}</p>
+              <p className="font-bold text-gray-900">{order.customerName}</p>
               <p className="flex items-center gap-1.5">
-                <Mail className="w-4 h-4 text-gray-400" /> {mockOrder.customer.email}
+                <Mail className="w-4 h-4 text-gray-400" /> {order.email}
               </p>
               <p className="flex items-center gap-1.5 font-semibold text-blue-600">
-                <Phone className="w-4 h-4 text-gray-400" /> {mockOrder.customer.phone}
+                <Phone className="w-4 h-4 text-gray-400" /> {order.phone}
               </p>
             </div>
           </div>
@@ -112,12 +127,11 @@ export default function AdminOrderDetailPage() {
               <MapPin className="w-4 h-4 text-blue-500" /> Shipping Destination
             </h3>
             <div className="text-xs sm:text-sm text-gray-600 space-y-1">
-              <p className="font-bold text-gray-900">{mockOrder.shippingAddress.fullName}</p>
-              <p>{mockOrder.shippingAddress.phone}</p>
-              <p>{mockOrder.shippingAddress.addressLine}</p>
+              <p className="font-bold text-gray-900">{order.shippingAddress.fullName}</p>
+              <p>{order.shippingAddress.phone}</p>
+              <p>{order.shippingAddress.addressLine}</p>
               <p>
-                {mockOrder.shippingAddress.area}, {mockOrder.shippingAddress.district},{' '}
-                {mockOrder.shippingAddress.division}
+                {order.shippingAddress.area}, {order.shippingAddress.district}, {order.shippingAddress.division}
               </p>
             </div>
           </div>
@@ -126,10 +140,10 @@ export default function AdminOrderDetailPage() {
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Line Items</h3>
             <div className="divide-y divide-gray-150 border rounded-2xl overflow-hidden bg-gray-50/10">
-              {mockOrder.items.map((item, idx) => (
+              {order.items.map((item, idx) => (
                 <div key={idx} className="flex gap-4 p-4 items-center">
                   <div className="relative w-12 h-16 rounded overflow-hidden bg-gray-50 border shrink-0">
-                    <img src={item.productImage} alt="" className="object-cover w-full h-full" />
+                    <img src={item.productImage || '/logo.png'} alt="" className="object-cover w-full h-full" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{item.productName}</p>
@@ -163,13 +177,28 @@ export default function AdminOrderDetailPage() {
                   onChange={(e: any) => setStatus(e.target.value)}
                   className="w-full border border-gray-200 px-3.5 py-2.5 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="Placed">Placed</option>
-                  <option value="Confirmed">Confirmed</option>
-                  <option value="Shipped">Shipped</option>
-                  <option value="Delivered">Delivered</option>
-                  <option value="Cancelled">Cancelled</option>
+                  <option value="placed">Placed</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
+
+              {status === 'shipped' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
+                    Tracking Link (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={trackingLink}
+                    onChange={(e) => setTrackingLink(e.target.value)}
+                    placeholder="https://tracker.com/..."
+                    className="w-full border border-gray-200 px-3.5 py-2.5 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
 
               <button
                 onClick={handleUpdateStatus}
@@ -189,21 +218,25 @@ export default function AdminOrderDetailPage() {
             <div className="space-y-2 text-gray-600">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{formatPrice(mockOrder.subtotal)}</span>
+                <span>{formatPrice(order.subtotal)}</span>
               </div>
               <div className="flex justify-between text-red-600">
                 <span>Coupon Discount</span>
-                <span>-{formatPrice(mockOrder.discount)}</span>
+                <span>-{formatPrice(order.discount || 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping fee</span>
                 <span>
-                  {mockOrder.shippingFee === 0 ? 'FREE' : formatPrice(mockOrder.shippingFee)}
+                  {order.shippingFee === 0 ? 'FREE' : formatPrice(order.shippingFee)}
                 </span>
               </div>
               <div className="flex justify-between font-bold text-gray-900 text-base border-t pt-2 border-gray-250">
                 <span>Payable Total</span>
-                <span className="text-blue-600">{formatPrice(mockOrder.total)}</span>
+                <span className="text-blue-600">{formatPrice(order.total)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-gray-500 text-xs mt-2 border-t pt-2 border-gray-250">
+                <span>Payment Method</span>
+                <span className="uppercase">{order.paymentMethod}</span>
               </div>
             </div>
           </div>
