@@ -1,6 +1,7 @@
 export const SITE_NAME = 'Wearix';
 export const SITE_TAGLINE = 'Wear Your Style';
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://wearix.com.bd';
+const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://wearix.com.bd';
+export const SITE_URL = rawSiteUrl.startsWith('http') ? rawSiteUrl : `https://${rawSiteUrl}`;
 export const WHATSAPP_NUMBER = '+8801700000000';
 
 export const CATEGORIES = [
