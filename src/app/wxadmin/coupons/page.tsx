@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Loader2, ToggleLeft, ToggleRight, X, Eye, ChevronRight } from 'lucide-react';
 import { 
   getCoupons, saveCoupon, deleteCoupon, updateCoupon, type Coupon, 
-  getCategories, getProducts, type Category, type Product,
-  getOrdersByCoupon, type Order
+  getCategories, getProducts,
+  getOrdersByCoupon
 } from '@/lib/db';
+import type { Category, Product } from '@/types/product';
+import type { Order } from '@/types/order';
 import toast from 'react-hot-toast';
 import { formatPrice } from '@/lib/utils';
 

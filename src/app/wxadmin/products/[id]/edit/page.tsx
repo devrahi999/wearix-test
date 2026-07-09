@@ -5,7 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { Upload, Plus, X, Loader2, ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getProductById, updateProduct, getCategories, type Category } from '@/lib/db';
+import { getProductById, updateProduct, getCategories } from '@/lib/db';
+import type { Category } from '@/types/product';
 import type { Product } from '@/types/product';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
