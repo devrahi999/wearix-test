@@ -4,7 +4,7 @@ import CategoryClient from './CategoryClient';
 import { SITE_NAME, SITE_URL } from '@/constants';
 
 interface Props {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

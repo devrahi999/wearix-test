@@ -42,6 +42,8 @@ export interface Category {
   slug: string;
   image: string;
   parentId?: string;
+  emoji?: string;
+  description?: string;
 }
 
 export interface ProductFilters {

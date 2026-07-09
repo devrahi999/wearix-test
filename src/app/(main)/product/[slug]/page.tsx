@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { SITE_NAME, SITE_URL } from '@/constants';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
