@@ -363,8 +363,8 @@ export default function AdminCouponsPage() {
                             <p className="font-bold text-gray-700 mb-1">Items Bought:</p>
                             <ul className="list-disc list-inside text-gray-600 space-y-1">
                               {order.items.map((item, idx) => (
-                                <li key={idx} className="truncate" title={item.productName}>
-                                  {item.quantity}x {item.productName}
+                                <li key={idx} className="truncate" title={item.productName || (item as any).name}>
+                                  {item.quantity}x {item.productName || (item as any).name}
                                 </li>
                               ))}
                             </ul>

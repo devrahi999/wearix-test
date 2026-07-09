@@ -143,10 +143,10 @@ export default function AdminOrderDetailPage() {
               {order.items.map((item, idx) => (
                 <div key={idx} className="flex gap-4 p-4 items-center">
                   <div className="relative w-12 h-16 rounded overflow-hidden bg-gray-50 border shrink-0">
-                    <img src={item.productImage || '/logo.png'} alt="" className="object-cover w-full h-full" />
+                    <img src={item.productImage || (item as any).image || '/logo.png'} alt="" className="object-cover w-full h-full" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{item.productName}</p>
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">{item.productName || (item as any).name}</p>
                     <p className="text-[10px] text-gray-400 mt-0.5 uppercase">
                       Size: {item.size} | Qty: {item.quantity}
                     </p>
