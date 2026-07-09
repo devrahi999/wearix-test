@@ -38,6 +38,7 @@ export default function AdminEditProductPage() {
     colors: '',
     isFeatured: false,
     isActive: true,
+    isOutOfStock: false,
   });
 
   const [stock, setStock] = useState<Record<string, number>>({});

@@ -243,7 +243,7 @@ export default function AdminOrdersPage() {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-gray-500 uppercase">Phone Number</span>
                     <button 
-                      onClick={() => copyToClipboard(selectedOrder.phone, 'phone')}
+                      onClick={() => copyToClipboard(selectedOrder.phone || '', 'phone')}
                       className="text-blue-600 hover:text-blue-700 text-xs font-bold flex items-center gap-1"
                     >
                       {copiedPhone ? <CheckCircle className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}

@@ -10,7 +10,8 @@ import {
 import * as Icons from 'lucide-react';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { SITE_NAME } from '@/constants';
-import { getCategories, type Category } from '@/lib/db';
+import { getCategories } from '@/lib/db';
+import type { Category } from '@/types/product';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -185,7 +186,7 @@ export default function Navbar() {
                       <div className={`relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border-2 ${
                         isActive ? 'border-blue-300' : 'border-gray-100 group-hover:border-blue-200'
                       }`}>
-                        {cat.image && <Image src={cat.image} alt={cat.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" sizes="40px" />}
+                        {cat.image && <Image src={cat.image} alt={cat.name} fill sizes="40px" className="object-cover" />}
                       </div>
                       <span className={isActive ? 'font-bold' : ''}>{cat.name}</span>
                     </Link>

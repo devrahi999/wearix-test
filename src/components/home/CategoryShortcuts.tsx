@@ -47,7 +47,7 @@ export default function CategoryShortcuts() {
                 className="group flex flex-col gap-2 p-2 bg-white border border-gray-100 rounded-2xl hover:border-blue-300 hover:shadow-md hover:-translate-y-1 transition-all duration-200"
               >
                 <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-100">
-                  {cat.image && <Image src={cat.image} alt={cat.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="(max-width: 768px) 25vw, 15vw" />}
+                  {cat.image && <Image src={cat.image} alt={cat.name} fill sizes="(max-width: 768px) 25vw, 15vw" className="object-cover group-hover:scale-110 transition-transform duration-500" />}
                 </div>
                 <span className="text-sm text-gray-800 group-hover:text-blue-600 transition-colors font-bold text-center leading-tight pb-1">
                   {cat.name}
