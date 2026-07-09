@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Plus, Trash2, Edit, Loader2, Upload, X, ToggleLeft, ToggleRight } from 'lucide-react';
-import { getAllHeroBanners, saveHeroBanner, deleteHeroBanner, type HeroBanner } from '@/lib/db';
+import { getHeroBanners, saveHeroBanner, deleteHeroBanner, type HeroBanner } from '@/lib/db';
 
 const empty: Omit<HeroBanner, 'id'> = {
   title: '', subtitle: '', imageUrl: '', link: '', buttonText: 'Shop Now', isActive: true, order: 0
@@ -19,7 +19,7 @@ export default function AdminBannersPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    getAllHeroBanners().then(d => { setBanners(d); setLoading(false); });
+    getHeroBanners().then(d => { setBanners(d); setLoading(false); });
   }, []);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

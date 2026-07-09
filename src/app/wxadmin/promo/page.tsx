@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Plus, Trash2, Edit, Loader2, Upload, ToggleLeft, ToggleRight } from 'lucide-react';
-import { getAllPromoBanners, savePromoBanner, deletePromoBanner, getFlashSaleConfig, updateFlashSaleConfig, type PromoBanner, type FlashSaleConfig } from '@/lib/db';
+import { getPromoBanners, savePromoBanner, deletePromoBanner, getFlashSaleConfig, updateFlashSaleConfig, type PromoBanner, type FlashSaleConfig } from '@/lib/db';
 
 const emptyPromo: Omit<PromoBanner, 'id'> = {
   title: '', subtitle: '', imageUrl: '', link: '', buttonText: 'Shop Now', isActive: true, order: 0
@@ -21,7 +21,7 @@ export default function AdminPromoPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    Promise.all([getAllPromoBanners(), getFlashSaleConfig()]).then(([promoData, flashData]) => {
+    Promise.all([getPromoBanners(), getFlashSaleConfig()]).then(([promoData, flashData]) => {
       setPromos(promoData);
       if (flashData) setFlashSale(flashData);
       setLoading(false);
