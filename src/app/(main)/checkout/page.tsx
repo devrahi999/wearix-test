@@ -168,8 +168,9 @@ function CheckoutForm() {
 
     setSubmitting(true);
 
+    let genId = '';
     try {
-      const genId = 'WX-' + Math.floor(100000 + Math.random() * 900000);
+      genId = 'WX-' + Math.floor(100000 + Math.random() * 900000);
       const newOrder = {
         id: genId,
         userId: user?.uid || 'guest',
