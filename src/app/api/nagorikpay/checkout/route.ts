@@ -10,8 +10,8 @@ export async function POST(req: Request) {
     }
 
     const sourceParam = source ? `&source=${source}` : '';
-    const successUrl = `${host}/api/nagorikpay/callback?order_id=${orderId}&status=success&type=${paymentType}${sourceParam}`;
-    const cancelUrl = `${host}/api/nagorikpay/callback?order_id=${orderId}&status=cancel${sourceParam}`;
+    const successUrl = `${host}/api/nagorikpay/callback/success?order_id=${orderId}&type=${paymentType}${sourceParam}`;
+    const cancelUrl = `${host}/api/nagorikpay/callback/cancel?order_id=${orderId}${sourceParam}`;
     
     let hostName = '';
     try {
