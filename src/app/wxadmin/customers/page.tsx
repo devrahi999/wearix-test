@@ -6,8 +6,10 @@ import { getAllUsers, updateUser, getUserOrders } from '@/lib/db';
 import type { Order } from '@/types/order';
 import { formatPrice } from '@/lib/utils';
 import Link from 'next/link';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 export default function AdminUsersPage() {
+  const { confirm } = useConfirm();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +41,8 @@ export default function AdminUsersPage() {
 
   const handleToggleAdmin = async (userId: string, currentStatus: boolean, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!confirm(`Are you sure you want to ${currentStatus ? 'remove' : 'grant'} admin privileges?`)) return;
+    const ok = await confirm({ message: `Are you sure you want to ${currentStatus ? 'remove' : 'grant'} admin privileges?` });
+    if (!ok) return;
     
     await updateUser(userId, { isAdmin: !currentStatus });
     

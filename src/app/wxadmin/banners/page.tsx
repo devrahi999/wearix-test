@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Plus, Trash2, Edit, Loader2, Upload, X, ToggleLeft, ToggleRight } from 'lucide-react';
 import { getHeroBanners, saveHeroBanner, deleteHeroBanner, type HeroBanner } from '@/lib/db';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 const empty: Omit<HeroBanner, 'id'> = {
   title: '', subtitle: '', imageUrl: '', link: '', buttonText: 'Shop Now', isActive: true, order: 0
 };
 
 export default function AdminBannersPage() {
+  const { confirm } = useConfirm();
   const [banners, setBanners] = useState<HeroBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<Omit<HeroBanner, 'id'>>(empty);
@@ -52,7 +54,8 @@ export default function AdminBannersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this banner?')) return;
+    const ok = await confirm({ message: 'Delete this banner?' });
+    if (!ok) return;
     await deleteHeroBanner(id);
     setBanners(prev => prev.filter(b => b.id !== id));
   };

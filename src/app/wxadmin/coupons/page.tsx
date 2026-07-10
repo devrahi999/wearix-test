@@ -11,6 +11,7 @@ import type { Category, Product } from '@/types/product';
 import type { Order } from '@/types/order';
 import toast from 'react-hot-toast';
 import { formatPrice } from '@/lib/utils';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 const empty: Omit<Coupon, 'id' | 'usedCount'> = {
   code: '', discountType: 'percent', discountValue: 10, minOrderAmount: 0,
@@ -18,6 +19,7 @@ const empty: Omit<Coupon, 'id' | 'usedCount'> = {
 };
 
 export default function AdminCouponsPage() {
+  const { confirm } = useConfirm();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,7 +61,8 @@ export default function AdminCouponsPage() {
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm('Delete this coupon?')) return;
+    const ok = await confirm({ message: 'Delete this coupon?' });
+    if (!ok) return;
     try {
       await deleteCoupon(id);
       setCoupons(prev => prev.filter(c => c.id !== id));

@@ -505,3 +505,13 @@ export async function submitReview(data: Omit<ProductReview, 'id' | 'createdAt'>
 export async function deleteReview(id: string) {
   await deleteDoc(doc(db, 'reviews', id));
 }
+
+export async function updateOrderPaymentStatus(id: string, paymentStatus: Order['paymentStatus']) {
+  try {
+    const docRef = doc(db, 'orders', id);
+    await updateDoc(docRef, { paymentStatus });
+  } catch (error) {
+    console.error('Error updating order payment status: ', error);
+    throw error;
+  }
+}

@@ -6,8 +6,10 @@ import { Plus, Search, CheckCircle2, XCircle, Trash2, Edit, Loader2 } from 'luci
 import { formatPrice } from '@/lib/utils';
 import { getProducts, deleteProduct, updateProduct } from '@/lib/db';
 import type { Product } from '@/types/product';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 export default function AdminProductsPage() {
+  const { confirm } = useConfirm();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -34,7 +36,8 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    const ok = await confirm({ message: 'Are you sure you want to delete this product?' });
+    if (!ok) return;
     await deleteProduct(id);
     setProducts(products.filter(p => p.id !== id));
   };

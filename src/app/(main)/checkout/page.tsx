@@ -50,7 +50,7 @@ function CheckoutForm() {
     setForm({ ...form, district: dist, area: areas[0] });
   };
 
-  const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'nagad' | 'sslcommerz' | 'cod'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -205,13 +205,37 @@ function CheckoutForm() {
         await recordCouponUsage(user?.uid || 'guest', appliedCoupon.id, appliedCoupon.code);
       }
 
+      // Redirect to Payment Gateway
+      const paymentAmount = paymentMethod === 'cod' ? shippingCharge : total;
+      
+      const res = await fetch('/api/nagorikpay/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: paymentAmount,
+          orderId: genId,
+          paymentType: paymentMethod,
+          host: window.location.origin
+        })
+      });
+
+      const paymentData = await res.json();
+      
       if (isBuyNow) {
         clearBuyNowItem();
       } else {
         clearCart();
       }
-      
-      router.push(`/order-confirmation/${genId}`);
+
+      if (!res.ok) {
+        throw new Error(paymentData.error || 'Failed to initialize payment');
+      }
+
+      if (paymentData.url) {
+        window.location.href = paymentData.url;
+      } else {
+        throw new Error('Payment URL not received');
+      }
     } catch (err) {
       console.error(err);
       setError('Failed to create order. Please try again.');
@@ -320,10 +344,16 @@ function CheckoutForm() {
               Payment Method
             </h2>
             <div className="grid grid-cols-1 gap-4">
-              <label className="relative flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all border-blue-600 bg-blue-50">
+              <label className={`relative flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'online' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
                 <div className="flex items-center gap-3">
-                  <input type="radio" name="payment" value="cod" checked readOnly className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                  <span className="font-semibold text-sm text-gray-900">Cash on Delivery</span>
+                  <input type="radio" name="payment" value="online" checked={paymentMethod === 'online'} onChange={() => setPaymentMethod('online')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                  <span className="font-semibold text-sm text-gray-900">Online Payment (Full Amount)</span>
+                </div>
+              </label>
+              <label className={`relative flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
+                <div className="flex items-center gap-3">
+                  <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                  <span className="font-semibold text-sm text-gray-900">Cash on Delivery (Pay Delivery Charge Only)</span>
                 </div>
               </label>
             </div>

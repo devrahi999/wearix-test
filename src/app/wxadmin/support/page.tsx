@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Loader2, Trash2, Mail, CheckCircle, X, Eye } from 'lucide-react';
 import { getSupportMessages, markSupportMessageRead, deleteSupportMessage, type SupportMessage } from '@/lib/db';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 export default function AdminSupportPage() {
+  const { confirm } = useConfirm();
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<SupportMessage | null>(null);
@@ -36,7 +38,8 @@ export default function AdminSupportPage() {
 
   const handleDelete = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this message?')) return;
+    const ok = await confirm({ message: 'Are you sure you want to delete this message?' });
+    if (!ok) return;
     await deleteSupportMessage(id);
     setMessages(prev => prev.filter(m => m.id !== id));
     if (selectedMessage?.id === id) {

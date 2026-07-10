@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Loader2, Trash2, Star, MessageSquare } from 'lucide-react';
 import { getAllReviews, deleteReview, type ProductReview } from '@/lib/db';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 export default function AdminReviewsPage() {
+  const { confirm } = useConfirm();
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +26,8 @@ export default function AdminReviewsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this review?')) return;
+    const ok = await confirm({ message: 'Are you sure you want to delete this review?' });
+    if (!ok) return;
     await deleteReview(id);
     setReviews(prev => prev.filter(r => r.id !== id));
   };

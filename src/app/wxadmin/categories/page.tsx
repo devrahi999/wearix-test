@@ -5,8 +5,10 @@ import Image from 'next/image';
 import { Plus, Trash2, FolderTree, Loader2, Upload } from 'lucide-react';
 import { getCategories, createCategory, deleteCategory } from '@/lib/db';
 import type { Category } from '@/types/product';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 export default function AdminCategoriesPage() {
+  const { confirm } = useConfirm();
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,7 +52,8 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this category?')) return;
+    const ok = await confirm({ message: 'Delete this category?' });
+    if (!ok) return;
     await deleteCategory(id);
     setCats(cats.filter(c => c.id !== id));
   };

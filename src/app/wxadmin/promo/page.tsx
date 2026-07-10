@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Plus, Trash2, Edit, Loader2, Upload, ToggleLeft, ToggleRight } from 'lucide-react';
 import { getPromoBanners, savePromoBanner, deletePromoBanner, getFlashSaleConfig, updateFlashSaleConfig, type PromoBanner, type FlashSaleConfig } from '@/lib/db';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 const emptyPromo: Omit<PromoBanner, 'id'> = {
   title: '', subtitle: '', imageUrl: '', link: '', buttonText: 'Shop Now', isActive: true, order: 0
 };
 
 export default function AdminPromoPage() {
+  const { confirm } = useConfirm();
   const [promos, setPromos] = useState<PromoBanner[]>([]);
   const [flashSale, setFlashSale] = useState<FlashSaleConfig>({ isActive: false, endsAt: '', label: '⚡ Flash Sale' });
   const [loading, setLoading] = useState(true);
@@ -55,7 +57,8 @@ export default function AdminPromoPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this promo box?')) return;
+    const ok = await confirm({ message: 'Delete this promo box?' });
+    if (!ok) return;
     await deletePromoBanner(id);
     setPromos(prev => prev.filter(p => p.id !== id));
   };
