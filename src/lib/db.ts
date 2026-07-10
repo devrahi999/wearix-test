@@ -294,6 +294,7 @@ export interface Coupon {
   expiresAt: string;
   validCategories?: string[];
   validProducts?: string[];
+  allowedUsers?: string[];
 }
 
 export async function getCoupons() {

@@ -77,6 +77,13 @@ export async function changePassword(
   await updatePassword(user, newPassword);
 }
 
+// Set password for the first time (e.g., Google auth users)
+export async function setPasswordOnly(newPassword: string) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
+  await updatePassword(user, newPassword);
+}
+
 // Update profile data in Firestore
 export async function updateUserProfile(
   uid: string,

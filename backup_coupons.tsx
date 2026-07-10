@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader2, ToggleLeft, ToggleRight, X, Eye, ChevronRight, Pencil } from 'lucide-react';
+import { Plus, Trash2, Loader2, ToggleLeft, ToggleRight, X, Eye, ChevronRight } from 'lucide-react';
 import { 
   getCoupons, saveCoupon, deleteCoupon, updateCoupon, type Coupon, 
   getCategories, getProducts, getAllUsers,
@@ -28,7 +28,6 @@ export default function AdminCouponsPage() {
   
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Omit<Coupon, 'id' | 'usedCount'>>(empty);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Details Modal
@@ -51,20 +50,13 @@ export default function AdminCouponsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      if (editingId) {
-        await updateCoupon(editingId, { ...form, code: form.code.toUpperCase() });
-        setCoupons(prev => prev.map(c => c.id === editingId ? { ...c, ...form, code: form.code.toUpperCase() } : c));
-        toast.success('Coupon updated successfully!');
-      } else {
-        const saved = await saveCoupon(form, form.code.toUpperCase());
-        setCoupons(prev => [saved, ...prev.filter(c => c.id !== saved.id)]);
-        toast.success('Coupon created successfully!');
-      }
+      const saved = await saveCoupon(form, form.code.toUpperCase());
+      setCoupons(prev => [saved, ...prev.filter(c => c.id !== saved.id)]);
       setForm(empty);
-      setEditingId(null);
       setShowForm(false);
+      toast.success('Coupon created successfully!');
     } catch (err) {
-      toast.error(editingId ? 'Failed to update coupon.' : 'Failed to create coupon.');
+      toast.error('Failed to create coupon.');
     }
     setSaving(false);
   };
@@ -109,25 +101,19 @@ export default function AdminCouponsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Manage Coupons</h1>
-        {!showForm && (
-          <button 
-            onClick={() => { setForm(empty); setEditingId(null); setShowForm(true); }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Add New Coupon
-          </button>
-        )}
+        <button 
+          onClick={() => setShowForm(!showForm)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
+        >
+          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          {showForm ? 'Cancel' : 'Add New Coupon'}
+        </button>
       </div>
 
       {showForm && (
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 border-b border-gray-100 p-6 flex justify-between items-center">
-            <h2 className="font-bold text-gray-900">{editingId ? 'Edit Coupon' : 'Create New Coupon'}</h2>
-            <button onClick={() => { setShowForm(false); setForm(empty); setEditingId(null); }} className="text-gray-400 hover:bg-gray-200 p-1.5 rounded-full transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <form onSubmit={handleAdd} className="p-6 space-y-4 text-sm max-w-4xl">
+        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+          <h2 className="font-bold text-gray-900 text-sm border-b pb-3 border-gray-100 mb-4">Create New Coupon</h2>
+          <form onSubmit={handleAdd} className="space-y-4 text-sm max-w-4xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Coupon Code *</label>
@@ -234,64 +220,11 @@ export default function AdminCouponsPage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-100">
-              <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Allowed Users (Optional - Leave empty for everyone)</label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {(form.allowedUsers || []).map(email => (
-                  <span key={email} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 text-orange-700 text-xs font-semibold">
-                    {email}
-                    <button type="button" onClick={() => setForm(prev => ({ ...prev, allowedUsers: prev.allowedUsers!.filter(u => u !== email) }))} className="hover:text-orange-900 transition-colors">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search user by email..."
-                  onChange={(e) => {
-                    const val = e.target.value.toLowerCase();
-                    const list = e.target.nextElementSibling as HTMLDivElement;
-                    if (!val) {
-                      list.style.display = 'none';
-                      return;
-                    }
-                    list.style.display = 'block';
-                    Array.from(list.children).forEach((child: any) => {
-                      child.style.display = child.textContent.toLowerCase().includes(val) ? 'block' : 'none';
-                    });
-                  }}
-                  onFocus={(e) => { e.target.value = ''; (e.target.nextElementSibling as HTMLDivElement).style.display = 'block'; }}
-                  className="w-full border border-gray-200 px-3 py-2 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl max-h-40 overflow-y-auto shadow-lg z-10 hidden">
-                  {users.filter(u => u.email && !(form.allowedUsers || []).includes(u.email)).map(u => (
-                    <div 
-                      key={u.id}
-                      className="px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer"
-                      onClick={(e) => {
-                        const input = e.currentTarget.parentElement!.previousElementSibling as HTMLInputElement;
-                        input.value = '';
-                        e.currentTarget.parentElement!.style.display = 'none';
-                        setForm(prev => ({ ...prev, allowedUsers: [...(prev.allowedUsers || []), u.email] }));
-                      }}
-                    >
-                      {u.email} {u.fullName ? `(${u.fullName})` : ''}
-                    </div>
-                  ))}
-                  {users.filter(u => u.email && !(form.allowedUsers || []).includes(u.email)).length === 0 && (
-                    <div className="px-3 py-2 text-xs text-gray-400">No matching users found.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
             <div className="flex justify-end pt-2">
               <button type="submit" disabled={saving}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-6 py-2.5 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors text-sm">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                {saving ? 'Saving...' : editingId ? 'Update Coupon' : 'Create Coupon'}
+                {saving ? 'Saving...' : 'Create Coupon'}
               </button>
             </div>
           </form>
@@ -339,22 +272,6 @@ export default function AdminCouponsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={(e) => { e.stopPropagation(); openDetails(c); }} className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors">
                             <Eye className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              setForm({
-                                code: c.code, discountType: c.discountType, discountValue: c.discountValue, 
-                                minOrderAmount: c.minOrderAmount, isActive: c.isActive, usageLimit: c.usageLimit, 
-                                expiresAt: c.expiresAt, validCategories: c.validCategories || [], 
-                                validProducts: c.validProducts || [], allowedUsers: c.allowedUsers || []
-                              });
-                              setEditingId(c.id); 
-                              setShowForm(true); 
-                            }} 
-                            className="p-1.5 text-gray-400 hover:text-orange-500 transition-colors"
-                          >
-                            <Pencil className="w-4 h-4" />
                           </button>
                           <button onClick={(e) => handleToggle(e, c)} className="transition-transform hover:scale-110">
                             {c.isActive ? <ToggleRight className="w-5 h-5 text-green-500" /> : <ToggleLeft className="w-5 h-5 text-gray-300" />}

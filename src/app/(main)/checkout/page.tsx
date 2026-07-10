@@ -10,7 +10,7 @@ import { ShoppingBag, ArrowRight, ShieldCheck, Check, AlertCircle, Loader2 } fro
 import { 
   getStoreSettings, type StoreSettings, 
   getCouponByCode, type Coupon, 
-  createOrder, hasUserUsedCoupon, recordCouponUsage, getProducts 
+  createOrder, hasUserUsedCoupon, recordCouponUsage, getProducts, deleteOrder 
 } from '@/lib/db';
 import { useAuth } from '@/context/AuthContext';
 
@@ -80,6 +80,14 @@ function CheckoutForm() {
         const used = await hasUserUsedCoupon(user.uid, coupon.code);
         if (used) {
           setCouponError('You have already used this coupon code.');
+          setValidatingCoupon(false);
+          return;
+        }
+      }
+
+      if (coupon.allowedUsers && coupon.allowedUsers.length > 0) {
+        if (!user || !user.email || !coupon.allowedUsers.includes(user.email)) {
+          setCouponError('You are not eligible to use this coupon.');
           setValidatingCoupon(false);
           return;
         }
@@ -215,18 +223,13 @@ function CheckoutForm() {
           amount: paymentAmount,
           orderId: genId,
           paymentType: paymentMethod,
-          host: window.location.origin
+          host: window.location.origin,
+          source: isBuyNow ? 'buy_now' : 'cart'
         })
       });
 
       const paymentData = await res.json();
       
-      if (isBuyNow) {
-        clearBuyNowItem();
-      } else {
-        clearCart();
-      }
-
       if (!res.ok) {
         throw new Error(paymentData.error || 'Failed to initialize payment');
       }
@@ -236,9 +239,17 @@ function CheckoutForm() {
       } else {
         throw new Error('Payment URL not received');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('Failed to create order. Please try again.');
+      if (genId) {
+        try {
+          await deleteOrder(genId);
+        } catch (delErr) {
+          console.error('Failed to rollback order creation:', delErr);
+        }
+      }
+      setError(err.message || 'Failed to create order. Please try again.');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -436,6 +447,13 @@ function CheckoutForm() {
                 <span className="text-xl font-black text-blue-600">{formatPrice(total)}</span>
               </div>
             </div>
+
+            {searchParams.get('cancel') === 'true' && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 shrink-0" />
+                <p className="font-medium">You cancelled the payment. The order has not been placed.</p>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-medium border border-red-100 flex items-start gap-2">

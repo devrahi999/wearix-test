@@ -2,15 +2,16 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { amount, orderId, paymentType, host } = await req.json();
+    const { amount, orderId, paymentType, host, source } = await req.json();
 
     const apiKey = process.env.NAGORIKPAY_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'NAGORIKPAY_API_KEY not found in env' }, { status: 500 });
     }
 
-    const successUrl = `${host}/api/nagorikpay/callback?order_id=${orderId}&status=success&type=${paymentType}`;
-    const cancelUrl = `${host}/api/nagorikpay/callback?order_id=${orderId}&status=cancel`;
+    const sourceParam = source ? `&source=${source}` : '';
+    const successUrl = `${host}/api/nagorikpay/callback?order_id=${orderId}&status=success&type=${paymentType}${sourceParam}`;
+    const cancelUrl = `${host}/api/nagorikpay/callback?order_id=${orderId}&status=cancel${sourceParam}`;
     
     let hostName = '';
     try {

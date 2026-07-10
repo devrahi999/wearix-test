@@ -156,13 +156,14 @@ export default function OrderDetailsPage() {
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h2 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Payment Details</h2>
             <div className="space-y-2 text-sm text-gray-600">
-              <p><span className="font-semibold text-gray-900">Method:</span> <span className="uppercase">{order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery'}</span></p>
               <p>
-                <span className="font-semibold text-gray-900">Status:</span>{' '}
-                <span className={`font-bold ${order.paymentStatus === 'paid' ? 'text-green-600' : order.paymentStatus === 'delivery_charge_paid' ? 'text-blue-600' : 'text-orange-500'}`}>
-                  {order.paymentStatus === 'paid' ? 'Full Amount Paid' 
-                    : order.paymentStatus === 'delivery_charge_paid' ? 'Delivery Charge Paid (COD)'
-                    : 'Unpaid'}
+                <span className="font-semibold text-gray-900">Method:</span>{' '}
+                <span className="uppercase">
+                  {order.paymentMethod === 'cod' ? (
+                    <>Cash on Delivery {order.paymentStatus === 'delivery_charge_paid' && <span className="text-blue-600 lowercase capitalize"> (Delivery Charge Paid)</span>}</>
+                  ) : (
+                    <>Online Payment {order.paymentStatus === 'paid' && <span className="text-green-600 lowercase capitalize"> (Paid Full)</span>}</>
+                  )}
                 </span>
               </p>
             </div>

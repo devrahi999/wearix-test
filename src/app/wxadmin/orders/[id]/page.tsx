@@ -236,14 +236,12 @@ export default function AdminOrderDetailPage() {
               </div>
               <div className="flex justify-between font-bold text-gray-500 text-xs mt-2 border-t pt-2 border-gray-250">
                 <span>Payment Method</span>
-                <span className="uppercase">{order.paymentMethod === 'online' ? 'Online' : 'COD'}</span>
-              </div>
-              <div className="flex justify-between font-bold text-gray-500 text-xs mt-1">
-                <span>Payment Status</span>
-                <span className={`uppercase ${order.paymentStatus === 'paid' ? 'text-green-600' : order.paymentStatus === 'delivery_charge_paid' ? 'text-blue-600' : 'text-orange-500'}`}>
-                  {order.paymentStatus === 'paid' ? 'Full Paid' 
-                    : order.paymentStatus === 'delivery_charge_paid' ? 'Delivery Charge Paid'
-                    : 'Unpaid'}
+                <span className="uppercase text-right ml-4">
+                  {order.paymentMethod === 'cod' ? (
+                    <>Cash on Delivery {order.paymentStatus === 'delivery_charge_paid' && <span className="text-blue-600 lowercase capitalize"><br/>(Delivery Charge Paid)</span>}</>
+                  ) : (
+                    <>Online Payment {order.paymentStatus === 'paid' && <span className="text-green-600 lowercase capitalize"><br/>(Paid Full)</span>}</>
+                  )}
                 </span>
               </div>
             </div>

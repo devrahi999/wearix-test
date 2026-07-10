@@ -4,13 +4,29 @@ import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, ShoppingBag, Truck, Calendar, MapPin, MessageCircle, FileText } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { useCartStore } from '@/store/cartStore';
 import { formatPrice } from '@/lib/utils';
 import { getStoreSettings, type StoreSettings } from '@/lib/db';
 import { WHATSAPP_NUMBER as DEFAULT_WA } from '@/constants';
 
 export default function OrderConfirmationPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const orderId = (params.orderId as string) || 'UNKNOWN_ORDER';
+  
+  const source = searchParams.get('source');
+  const error = searchParams.get('error');
+
+  const { clearCart, clearBuyNowItem } = useCartStore();
+
+  useEffect(() => {
+    if (source === 'buy_now') {
+      clearBuyNowItem();
+    } else if (source === 'cart') {
+      clearCart();
+    }
+  }, [source, clearCart, clearBuyNowItem]);
   
   const [waNumber, setWaNumber] = useState(DEFAULT_WA);
 

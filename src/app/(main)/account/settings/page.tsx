@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { updateUserProfile, changePassword } from '@/lib/authHelpers';
+import { auth } from '@/lib/firebase';
+import { updateUserProfile, changePassword, setPasswordOnly } from '@/lib/authHelpers';
 import { Loader2, AlertCircle, Check, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -22,6 +23,8 @@ export default function SettingsPage() {
   const [passLoading, setPassLoading] = useState(false);
   const [profileMsg, setProfileMsg] = useState({ type: '', text: '' });
   const [passMsg, setPassMsg] = useState({ type: '', text: '' });
+
+  const hasPasswordProvider = auth.currentUser?.providerData.some(p => p.providerId === 'password');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -55,12 +58,21 @@ export default function SettingsPage() {
     setPassLoading(true);
     setPassMsg({ type: '', text: '' });
     try {
-      await changePassword(currentPassword, newPassword);
-      setPassMsg({ type: 'success', text: 'Password changed successfully!' });
+      if (hasPasswordProvider) {
+        await changePassword(currentPassword, newPassword);
+        setPassMsg({ type: 'success', text: 'Password changed successfully!' });
+      } else {
+        await setPasswordOnly(newPassword);
+        setPassMsg({ type: 'success', text: 'Password set successfully! You can now login with email/password.' });
+      }
       setCurrentPassword('');
       setNewPassword('');
     } catch (err: any) {
-      setPassMsg({ type: 'error', text: err.message || 'Failed to change password. Ensure current password is correct.' });
+      if (err.message.includes('requires-recent-login')) {
+        setPassMsg({ type: 'error', text: 'Please log out and log back in to set your password.' });
+      } else {
+        setPassMsg({ type: 'error', text: err.message || 'Failed to update password.' });
+      }
     } finally {
       setPassLoading(false);
     }
@@ -119,7 +131,12 @@ export default function SettingsPage() {
 
       {/* Change Password */}
       <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Change Password</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-4">{hasPasswordProvider ? 'Change Password' : 'Set Password'}</h2>
+        {!hasPasswordProvider && (
+          <p className="text-sm text-gray-500 mb-4">
+            You signed up with Google. Set a password here so you can log in with your email and password in the future.
+          </p>
+        )}
         
         {passMsg.text && (
           <div className={`flex items-center gap-2 p-3 rounded-xl mb-4 text-sm ${passMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
@@ -129,16 +146,18 @@ export default function SettingsPage() {
         )}
 
         <form onSubmit={handlePasswordChange} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Current Password</label>
-            <input
-              type="password"
-              required
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full border border-gray-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          {hasPasswordProvider && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Current Password</label>
+              <input
+                type="password"
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full border border-gray-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">New Password</label>
             <input
@@ -154,7 +173,7 @@ export default function SettingsPage() {
             disabled={passLoading}
             className="w-full h-11 border-2 border-gray-900 hover:bg-gray-900 text-gray-900 hover:text-white disabled:opacity-50 font-bold rounded-xl flex items-center justify-center transition-colors text-sm"
           >
-            {passLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update Password'}
+            {passLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (hasPasswordProvider ? 'Update Password' : 'Set Password')}
           </button>
         </form>
       </div>
