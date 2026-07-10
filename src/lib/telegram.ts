@@ -22,25 +22,29 @@ export async function sendTelegramOrderAlert(orderId: string, type: string) {
       itemsStr += `${i + 1}. ${item.productName} (x${item.quantity}) - ${formatPrice(item.price * item.quantity)}\n`;
     });
     
-    const message = `🛍️ *NEW ORDER RECEIVED!*\n\n` +
-      `*Order ID:* \`${orderId}\`\n` +
-      `*Customer:* ${order.shippingAddress?.fullName || order.customerName}\n` +
-      `*Phone:* ${order.shippingAddress?.phone || order.phone}\n` +
-      `*Total Amount:* ${totalAmount}\n` +
-      `*Payment:* ${paymentMethodStr}\n\n` +
-      `*Items:*\n${itemsStr}\n` +
+    const message = `🛍️ <b>NEW ORDER RECEIVED!</b>\n\n` +
+      `<b>Order ID:</b> <code>${orderId}</code>\n` +
+      `<b>Customer:</b> ${order.shippingAddress?.fullName || order.customerName}\n` +
+      `<b>Phone:</b> ${order.shippingAddress?.phone || order.phone}\n` +
+      `<b>Total Amount:</b> ${totalAmount}\n` +
+      `<b>Payment:</b> ${paymentMethodStr}\n\n` +
+      `<b>Items:</b>\n${itemsStr}\n` +
       `Login to admin panel for full details.`;
       
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    await fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: chatId,
         text: message,
-        parse_mode: 'Markdown'
+        parse_mode: 'HTML'
       })
     });
+    
+    if (!res.ok) {
+      console.error('Telegram API Error:', await res.text());
+    }
   } catch (error) {
     console.error('Telegram alert failed:', error);
   }
