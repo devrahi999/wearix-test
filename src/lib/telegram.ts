@@ -1,4 +1,4 @@
-import { getOrderById } from '@/lib/db';
+import { adminDb } from '@/lib/firebase-admin';
 import { formatPrice } from '@/lib/utils';
 
 export async function sendTelegramOrderAlert(orderId: string, type: string) {
@@ -11,8 +11,9 @@ export async function sendTelegramOrderAlert(orderId: string, type: string) {
   }
   
   try {
-    const order = await getOrderById(orderId);
-    if (!order) return;
+    const orderDoc = await adminDb.collection('orders').doc(orderId).get();
+    if (!orderDoc.exists) return;
+    const order = orderDoc.data() as any;
     
     const paymentMethodStr = type === 'cod' ? 'Cash on Delivery (Delivery Charge Paid)' : 'Online Payment (Full Paid)';
     const totalAmount = formatPrice(order.total);

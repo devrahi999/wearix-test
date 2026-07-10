@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deleteOrder } from '@/lib/db';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(req: Request) {
   return handleRequest(req);
@@ -16,7 +16,7 @@ async function handleRequest(req: Request) {
 
   if (orderId) {
     try {
-      await deleteOrder(orderId);
+      await adminDb.collection('orders').doc(orderId).delete();
     } catch (err) {
       console.error('Failed to delete order on payment cancel:', err);
     }
