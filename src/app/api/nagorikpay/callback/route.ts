@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { updateOrderPaymentStatus, deleteOrder } from '@/lib/db';
 import type { PaymentStatus } from '@/types/order';
+import { sendTelegramOrderAlert } from '@/lib/telegram';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -17,6 +18,10 @@ export async function GET(req: Request) {
     try {
       const paymentStatus: PaymentStatus = type === 'cod' ? 'delivery_charge_paid' : 'paid';
       await updateOrderPaymentStatus(orderId, paymentStatus);
+      
+      // Send Telegram alert
+      await sendTelegramOrderAlert(orderId, type || 'online');
+
       return NextResponse.redirect(new URL(`/order-confirmation/${orderId}?source=${source}`, req.url));
     } catch (err) {
       console.error('Failed to update payment status:', err);
