@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Plus, Trash2, FolderTree, Loader2, Upload } from 'lucide-react';
-import { getCategories, createCategory, deleteCategory } from '@/lib/db';
+import { Plus, Trash2, FolderTree, Loader2, Upload, Edit, X } from 'lucide-react';
+import { getCategories, createCategory, deleteCategory, updateCategory } from '@/lib/db';
 import type { Category } from '@/types/product';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
 
@@ -12,9 +12,10 @@ export default function AdminCategoriesPage() {
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [newCat, setNewCat] = useState({ name: '', slug: '', image: '' });
+  const [form, setForm] = useState({ name: '', slug: '', image: '' });
   const [imagePreview, setImagePreview] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -32,23 +33,45 @@ export default function AdminCategoriesPage() {
     formData.append('file', file);
     const res = await fetch('/api/upload', { method: 'POST', body: formData });
     const data = await res.json();
-    setNewCat(prev => ({ ...prev, image: data.url }));
+    setForm(prev => ({ ...prev, image: data.url }));
     setImagePreview(data.url);
     setUploading(false);
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCat.name || !newCat.image || !newCat.slug) return;
+    if (!form.name || !form.image || !form.slug) return;
     setSaving(true);
-    const created = await createCategory(
-      { name: newCat.name, slug: newCat.slug, image: newCat.image },
-      newCat.slug
-    );
-    setCats([...cats, created]);
-    setNewCat({ name: '', slug: '', image: '' });
+    
+    if (editingId) {
+      await updateCategory(editingId, { name: form.name, slug: form.slug, image: form.image });
+      setCats(cats.map(c => c.id === editingId ? { ...c, name: form.name, slug: form.slug, image: form.image } : c));
+    } else {
+      const created = await createCategory(
+        { name: form.name, slug: form.slug, image: form.image },
+        form.slug
+      );
+      setCats([...cats, created]);
+    }
+    
+    setForm({ name: '', slug: '', image: '' });
     setImagePreview('');
+    setEditingId(null);
     setSaving(false);
+  };
+
+  const handleEditClick = (cat: Category) => {
+    setEditingId(cat.id);
+    setForm({ name: cat.name, slug: cat.slug, image: cat.image });
+    setImagePreview(cat.image);
+    // scroll to top to see the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setForm({ name: '', slug: '', image: '' });
+    setImagePreview('');
   };
 
   const handleDelete = async (id: string) => {
@@ -56,6 +79,7 @@ export default function AdminCategoriesPage() {
     if (!ok) return;
     await deleteCategory(id);
     setCats(cats.filter(c => c.id !== id));
+    if (editingId === id) handleCancelEdit();
   };
 
   return (
@@ -93,12 +117,20 @@ export default function AdminCategoriesPage() {
                     <td className="py-3 font-bold text-gray-900">{cat.name}</td>
                     <td className="py-3 font-mono text-gray-400">{cat.slug}</td>
                     <td className="py-3 text-right">
-                      <button
-                        onClick={() => handleDelete(cat.id)}
-                        className="p-1.5 border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:border-red-200"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEditClick(cat)}
+                          className="p-1.5 border border-gray-200 rounded-lg text-gray-400 hover:text-blue-500 hover:border-blue-200"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cat.id)}
+                          className="p-1.5 border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:border-red-200"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -108,19 +140,30 @@ export default function AdminCategoriesPage() {
         )}
       </div>
 
-      {/* Add Form */}
+      {/* Add / Edit Form */}
       <div className="md:col-span-4 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4 h-fit">
-        <h2 className="font-bold text-gray-900 text-sm border-b pb-3 border-gray-100">Add Category</h2>
-        <form onSubmit={handleAdd} className="space-y-4">
+        <div className="flex items-center justify-between border-b pb-3 border-gray-100">
+          <h2 className="font-bold text-gray-900 text-sm">{editingId ? 'Edit Category' : 'Add Category'}</h2>
+          {editingId && (
+            <button onClick={handleCancelEdit} className="text-gray-400 hover:text-gray-600">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Category Name</label>
             <input
               type="text"
               required
-              value={newCat.name}
+              value={form.name}
               onChange={(e) => {
                 const val = e.target.value;
-                setNewCat({ ...newCat, name: val, slug: val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') });
+                if (!editingId) {
+                  setForm({ ...form, name: val, slug: val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') });
+                } else {
+                  setForm({ ...form, name: val });
+                }
               }}
               className="w-full border border-gray-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g. Winter Collection"
@@ -131,12 +174,15 @@ export default function AdminCategoriesPage() {
             <input
               type="text"
               required
-              value={newCat.slug}
-              onChange={(e) => setNewCat({ ...newCat, slug: e.target.value })}
-              className="w-full border border-gray-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={form.slug}
+              disabled={!!editingId}
+              onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              className={`w-full border border-gray-200 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${editingId ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
               placeholder="e.g. winter-collection"
             />
-            <p className="text-[10px] text-gray-400 mt-1">This will be the document ID in Firebase and URL slug.</p>
+            <p className="text-[10px] text-gray-400 mt-1">
+              {editingId ? "Slug cannot be changed while editing." : "This will be the document ID in Firebase and URL slug."}
+            </p>
           </div>
           <div>
             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Category Image</label>
@@ -158,11 +204,11 @@ export default function AdminCategoriesPage() {
 
           <button
             type="submit"
-            disabled={saving || uploading || !newCat.image}
+            disabled={saving || uploading || !form.image}
             className="w-full h-10 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors text-xs shadow-sm"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            {saving ? 'Saving...' : 'Add Category'}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingId ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />)}
+            {saving ? 'Saving...' : (editingId ? 'Update Category' : 'Add Category')}
           </button>
         </form>
       </div>

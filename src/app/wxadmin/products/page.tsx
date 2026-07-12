@@ -13,6 +13,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,10 +23,14 @@ export default function AdminProductsPage() {
     });
   }, []);
 
+  const uniqueCategories = Array.from(new Set(products.map(p => p.category)));
+
   const filtered = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(query.toLowerCase()) ||
-      p.category.toLowerCase().includes(query.toLowerCase())
+    (p) => {
+      const matchesSearch = p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase());
+      const matchesCategory = filterCategory === 'All' || p.category === filterCategory;
+      return matchesSearch && matchesCategory;
+    }
   );
 
   const handleToggleActive = async (id: string, current: boolean) => {
@@ -59,15 +64,27 @@ export default function AdminProductsPage() {
         </Link>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search products..."
-          className="w-full border border-gray-200 pl-10 pr-4 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search products..."
+            className="w-full border border-gray-200 pl-10 pr-4 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="w-full sm:w-48 border border-gray-200 px-3 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="All">All Categories</option>
+          {uniqueCategories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
       </div>
 
       {loading ? (

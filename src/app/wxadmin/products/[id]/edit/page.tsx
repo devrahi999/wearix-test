@@ -110,7 +110,7 @@ export default function AdminEditProductPage() {
         category: form.category,
         gender: form.gender,
         price: Number(form.price),
-        discountPrice: form.discountPrice ? Number(form.discountPrice) : undefined,
+        discountPrice: form.discountPrice ? Number(form.discountPrice) : null,
         images,
         sizes: selectedSizes,
         colors: form.colors.split(',').map(c => c.trim()).filter(Boolean),
