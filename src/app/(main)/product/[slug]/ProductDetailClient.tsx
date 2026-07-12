@@ -13,6 +13,7 @@ import { formatPrice, discountPercent } from '@/lib/utils';
 import ProductGrid from '@/components/product/ProductGrid';
 import SizeSelector from '@/components/product/SizeSelector';
 import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 
 export default function ProductDetailClient({ initialSlug }: { initialSlug: string }) {
   const router = useRouter();
@@ -70,10 +71,10 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
       });
       setReviews([newReview, ...reviews]);
       setReviewForm({ rating: 5, text: '' });
-      alert('Review submitted successfully!');
+      toast.success('Successfully submitted your review');
     } catch (err) {
       console.error(err);
-      alert('Failed to submit review');
+      toast.error('Failed to submit review');
     } finally {
       setSubmittingReview(false);
     }
@@ -410,7 +411,14 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
               </div>
 
               {/* Add Review Form */}
-              <form onSubmit={handleReviewSubmit} className="flex-1 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 w-full">
+              {user && reviews.some(r => r.userId === user.uid) ? (
+                <div className="flex-1 bg-gray-50/50 p-6 rounded-2xl border border-gray-100 w-full flex items-center justify-center text-center">
+                  <p className="text-sm text-gray-500 font-medium flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" /> You submitted your review already
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleReviewSubmit} className="flex-1 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 w-full">
                 <h3 className="font-bold text-gray-900 mb-4">Write a Review</h3>
                 <div className="space-y-4">
                   <div>
@@ -436,7 +444,8 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
                     {submittingReview ? 'Submitting...' : 'Submit Review'}
                   </button>
                 </div>
-              </form>
+                </form>
+              )}
             </div>
 
             {/* Review List */}

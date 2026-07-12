@@ -24,6 +24,7 @@ const fadeInUp = {
 export default function HomeClient() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [topProducts, setTopProducts] = useState<Product[]>([]);
   const [randomProducts, setRandomProducts] = useState<Product[]>([]);
   const [heroBanners, setHeroBanners] = useState<HeroBanner[]>([]);
   const [promoBanners, setPromoBanners] = useState<PromoBanner[]>([]);
@@ -38,6 +39,14 @@ export default function HomeClient() {
       // Random 8 products
       const shuffled = [...active].sort(() => 0.5 - Math.random());
       setRandomProducts(shuffled.slice(0, 8));
+
+      // Top 4 Selling/Rated products
+      const sortedByTop = [...active].sort((a, b) => {
+        const scoreA = (a.soldCount || 0) * 10 + (a.rating || 0);
+        const scoreB = (b.soldCount || 0) * 10 + (b.rating || 0);
+        return scoreB - scoreA;
+      });
+      setTopProducts(sortedByTop.slice(0, 4));
     });
     
     const unsubHero = listenToHeroBanners(setHeroBanners);
@@ -176,6 +185,25 @@ export default function HomeClient() {
           </div>
           <ProductGrid products={newArrivals} />
         </motion.section>
+
+        {/* Top Selling & Rated Products */}
+        {topProducts.length > 0 && (
+          <motion.section variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} className="pt-8 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                  Top Rated & Best Selling
+                </h2>
+                <p className="text-gray-500 text-sm mt-1">Our most loved products by customers</p>
+              </div>
+              <Link href="/shop" className="hidden sm:flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                View All <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <ProductGrid products={topProducts} />
+          </motion.section>
+        )}
 
         {/* Other Collections (Random Products) */}
         {randomProducts.length > 0 && (
