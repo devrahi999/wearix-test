@@ -37,6 +37,7 @@ export default function AdminEditProductPage() {
     tags: '',
     rating: '5.0',
     reviewCount: '1',
+    soldCount: '0',
     colors: '',
     isFeatured: false,
     isActive: true,
@@ -63,6 +64,7 @@ export default function AdminEditProductPage() {
           tags: (p.tags || []).join(', '),
           rating: p.rating !== undefined ? p.rating.toString() : '5.0',
           reviewCount: p.reviewCount !== undefined ? p.reviewCount.toString() : '1',
+          soldCount: p.soldCount !== undefined ? p.soldCount.toString() : '0',
           colors: (p.colors || []).join(', '),
           isFeatured: !!p.isFeatured,
           isActive: !!p.isActive,
@@ -121,6 +123,7 @@ export default function AdminEditProductPage() {
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         rating: Number(form.rating) || 5,
         reviewCount: Number(form.reviewCount) || 1,
+        soldCount: Number(form.soldCount) || 0,
         isFeatured: form.isFeatured,
         isActive: form.isActive,
         isFlashSale: form.isFlashSale,
@@ -277,6 +280,11 @@ export default function AdminEditProductPage() {
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Total Reviews</label>
               <input type="number" min="0" value={form.reviewCount} onChange={e => setForm({...form, reviewCount: e.target.value})}
+                className="w-full border border-gray-200 px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Total Sold</label>
+              <input type="number" min="0" value={form.soldCount} onChange={e => setForm({...form, soldCount: e.target.value})}
                 className="w-full border border-gray-200 px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>

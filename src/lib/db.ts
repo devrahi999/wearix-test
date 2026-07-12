@@ -154,6 +154,23 @@ export async function createOrder(data: Partial<Order> & Omit<Order, 'id' | 'cre
     createdAt: new Date().toISOString()
   };
   await setDoc(newRef, orderData);
+
+  // Increment soldCount for products
+  if (data.items && data.items.length > 0) {
+    for (const item of data.items) {
+      if (item.productId) {
+        const prodRef = doc(db, 'products', item.productId);
+        try {
+          await updateDoc(prodRef, {
+            soldCount: increment(item.quantity)
+          });
+        } catch (err) {
+          console.error("Failed to increment soldCount for product", item.productId, err);
+        }
+      }
+    }
+  }
+
   return { id: newRef.id, ...orderData } as Order;
 }
 

@@ -231,7 +231,12 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
                 ))}
               </div>
               <span className="text-sm font-semibold text-gray-700">{product.rating.toFixed(1)}</span>
-              <span className="text-sm text-gray-400">({reviews.length} reviews)</span>
+              <span className="text-sm text-gray-400">({product.reviewCount} reviews)</span>
+              {product.soldCount > 0 && (
+                <span className="text-sm font-medium text-gray-500 ml-2 pl-2 border-l border-gray-200">
+                  {product.soldCount} Sold
+                </span>
+              )}
             </div>
 
             {/* Pricing */}
@@ -400,7 +405,7 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
                 </div>
                 <div>
                   <p className="font-bold text-gray-900 text-sm">Review Summary</p>
-                  <p className="text-xs text-gray-400 mt-1">{reviews.length} total reviews</p>
+                  <p className="text-xs text-gray-400 mt-1">{product.reviewCount} total reviews</p>
                 </div>
               </div>
 

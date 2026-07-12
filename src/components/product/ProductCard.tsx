@@ -119,34 +119,24 @@ export default function ProductCard({ product, isFlashSalePage }: ProductCardPro
             <span className="text-xs text-gray-400">({product.reviewCount})</span>
           </div>
 
-          {/* Price */}
-          <div className="flex items-baseline gap-2 mt-1.5">
-            <span className="text-base font-bold text-gray-900">
-              {formatPrice(product.discountPrice ?? product.price)}
-            </span>
-            {product.discountPrice && (
-              <span className="text-xs text-gray-400 line-through">
-                {formatPrice(product.price)}
+          {/* Price & Sold */}
+          <div className="flex items-center justify-between mt-1.5">
+            <div className="flex items-baseline gap-2">
+              <span className="text-base font-bold text-gray-900">
+                {formatPrice(product.discountPrice ?? product.price)}
+              </span>
+              {product.discountPrice && (
+                <span className="text-xs text-gray-400 line-through">
+                  {formatPrice(product.price)}
+                </span>
+              )}
+            </div>
+            {product.soldCount > 0 && (
+              <span className="text-[10px] text-gray-500 font-medium">
+                {product.soldCount} Sold
               </span>
             )}
           </div>
-
-          {/* Sizes preview */}
-          {product.sizes.length > 0 && (
-            <div className="flex gap-1 mt-2 flex-wrap">
-              {product.sizes.slice(0, 4).map((size) => (
-                <span
-                  key={size}
-                  className="text-xs px-1.5 py-0.5 rounded border border-gray-200 text-gray-600"
-                >
-                  {size}
-                </span>
-              ))}
-              {product.sizes.length > 4 && (
-                <span className="text-xs text-gray-400">+{product.sizes.length - 4}</span>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </Link>

@@ -17,6 +17,7 @@ export interface Product {
   tags: string[];
   rating: number;
   reviewCount: number;
+  soldCount: number;
   isFeatured: boolean;
   isActive: boolean;
   isFlashSale?: boolean;
