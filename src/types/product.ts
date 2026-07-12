@@ -9,7 +9,7 @@ export interface Product {
   subcategory?: string;
   gender: Gender;
   price: number;
-  discountPrice?: number;
+  discountPrice?: number | null;
   images: string[];
   sizes: string[];
   colors: string[];
