@@ -228,7 +228,7 @@ function CheckoutForm() {
       // Redirect to Payment Gateway
       const paymentAmount = paymentMethod === 'cod' ? shippingCharge : total;
       
-      if (paymentMethod === 'cod' && paymentAmount === 0) {
+      if (paymentMethod === 'cod' && (paymentAmount === 0 || (hasFullCodProduct && !hasNormalProduct))) {
         await fetch('/api/checkout/direct-cod', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
