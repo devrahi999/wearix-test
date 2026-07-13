@@ -200,6 +200,11 @@ export default function NewProductPage() {
               <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sale Price (optional)</label>
               <input type="number" min="0" value={form.discountPrice} onChange={e => setForm({...form, discountPrice: e.target.value})}
                 className="w-full border border-gray-200 px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              {Number(form.price) > 0 && Number(form.discountPrice) > 0 && Number(form.discountPrice) < Number(form.price) && (
+                <p className="text-xs text-green-600 mt-1.5 font-bold">
+                  {Math.round(((Number(form.price) - Number(form.discountPrice)) / Number(form.price)) * 100)}% Off
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Colors (comma separated)</label>
