@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import MetaPixel from '@/components/MetaPixel';
 import './globals.css';
 
 const inter = Inter({
@@ -69,6 +70,7 @@ export default function RootLayout({
           {children}
         </AuthProvider>
         <Toaster position="top-center" />
+        <MetaPixel />
       </body>
     </html>
   );
