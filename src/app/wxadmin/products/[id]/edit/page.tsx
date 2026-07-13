@@ -43,6 +43,8 @@ export default function AdminEditProductPage() {
     isActive: true,
     isFlashSale: false,
     isOutOfStock: false,
+    isFullCodEnabled: false,
+    isFreeDelivery: false,
   });
 
   const [stock, setStock] = useState<Record<string, number>>({});
@@ -70,6 +72,8 @@ export default function AdminEditProductPage() {
           isActive: !!p.isActive,
           isFlashSale: !!p.isFlashSale,
           isOutOfStock: !!p.isOutOfStock,
+          isFullCodEnabled: !!p.isFullCodEnabled,
+          isFreeDelivery: !!p.isFreeDelivery,
         });
         setImages(p.images || []);
         setSelectedSizes(p.sizes || []);
@@ -128,6 +132,8 @@ export default function AdminEditProductPage() {
         isActive: form.isActive,
         isFlashSale: form.isFlashSale,
         isOutOfStock: form.isOutOfStock,
+        isFullCodEnabled: form.isFullCodEnabled,
+        isFreeDelivery: form.isFreeDelivery,
         stock: {},
       });
       router.push('/wxadmin/products');
@@ -310,6 +316,26 @@ export default function AdminEditProductPage() {
                 className="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500" />
               <span className="text-sm font-medium text-red-600">Mark as Out of Stock</span>
             </label>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100">
+            <h3 className="font-bold text-gray-900 mb-3 text-sm">Delivery & Payment Settings</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                <input type="checkbox" checked={form.isFullCodEnabled} onChange={e => setForm({...form, isFullCodEnabled: e.target.checked})} className="w-4 h-4 text-blue-600 rounded" />
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">Full COD Enabled</div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">Allow ordering without advance delivery charge</div>
+                </div>
+              </label>
+              <label className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                <input type="checkbox" checked={form.isFreeDelivery} onChange={e => setForm({...form, isFreeDelivery: e.target.checked})} className="w-4 h-4 text-blue-600 rounded" />
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">Free Delivery</div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">Order will have 0 delivery charge</div>
+                </div>
+              </label>
+            </div>
           </div>
         </div>
 

@@ -115,6 +115,8 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
       discountPrice: product.discountPrice,
       quantity,
       slug: product.slug,
+      isFullCodEnabled: product.isFullCodEnabled,
+      isFreeDelivery: product.isFreeDelivery,
     });
     setAddedNotify(true);
     setTimeout(() => setAddedNotify(false), 3000);
@@ -136,6 +138,8 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
       discountPrice: product.discountPrice,
       quantity,
       slug: product.slug,
+      isFullCodEnabled: product.isFullCodEnabled,
+      isFreeDelivery: product.isFreeDelivery,
     });
     router.push('/checkout?buyNow=true');
   };
@@ -211,10 +215,17 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
         <div className="space-y-6 flex flex-col justify-between">
           <div className="space-y-4">
             <div>
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-full">
-                {product.category}
-              </span>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-2.5 leading-snug">
+              <div className="flex gap-2 items-center mb-2">
+                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-full">
+                  {product.category}
+                </span>
+                {product.isFreeDelivery && (
+                  <span className="text-xs font-bold text-green-700 uppercase tracking-wider bg-green-100 border border-green-200 px-2.5 py-1 rounded-full">
+                    Free Delivery
+                  </span>
+                )}
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-snug">
                 {product.name}
               </h1>
             </div>

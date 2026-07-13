@@ -11,6 +11,8 @@ export interface CartItem {
   discountPrice?: number | null;
   quantity: number;
   slug: string;
+  isFullCodEnabled?: boolean;
+  isFreeDelivery?: boolean;
 }
 
 interface CartStore {

@@ -71,6 +71,11 @@ export default function ProductCard({ product, isFlashSalePage }: ProductCardPro
                 -{discountPercent(product.price, product.discountPrice)}%
               </span>
             )}
+            {product.isFreeDelivery && (
+              <span className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                Free Delivery
+              </span>
+            )}
             {isOutOfStock && (
               <span className="bg-gray-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                 Out of Stock

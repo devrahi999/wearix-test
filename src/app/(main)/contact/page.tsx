@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Mail, Phone, MapPin, Send, Check, Loader2, MessageCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Check, Loader2, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { getStoreSettings, submitSupportMessage, type StoreSettings } from '@/lib/db';
 
 export default function ContactPage() {
@@ -9,6 +9,34 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+
+  const faqs = [
+    {
+      q: 'What are the delivery charges at Wearix?',
+      a: 'We charge a flat fee of ৳60 for deliveries inside Dhaka and ৳120 for deliveries outside Dhaka. Enjoy FREE shipping inside Dhaka for orders above ৳1,500.',
+    },
+    {
+      q: 'How long will it take to get my order?',
+      a: 'Deliveries within Dhaka are completed within 24 to 48 hours. Deliveries outside Dhaka typically take 2 to 4 business days.',
+    },
+    {
+      q: 'Do you offer Cash on Delivery (COD)?',
+      a: 'Yes! Cash on Delivery is available all over Bangladesh. You pay the courier agent only after receiving your parcel.',
+    },
+    {
+      q: 'What is your return policy?',
+      a: 'We offer a 7-day hassle-free return and exchange policy. If the size does not fit or you find a product defect, contact us via WhatsApp or phone to log a exchange request.',
+    },
+    {
+      q: 'How can I pay for my orders?',
+      a: 'We accept payments via bKash, Nagad, Visa, Mastercard, and Cash on Delivery.',
+    },
+  ];
+
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const toggle = (idx: number) => {
+    setOpenIndex(openIndex === idx ? null : idx);
+  };
 
   useEffect(() => {
     getStoreSettings().then(setSettings);
@@ -153,6 +181,42 @@ export default function ContactPage() {
               {loading ? 'Sending...' : 'Send Message'}
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="mt-16 max-w-3xl mx-auto space-y-6">
+        <div className="text-center space-y-2 pb-2">
+          <h2 className="text-3xl font-extrabold text-gray-900">Frequently Asked Questions</h2>
+          <p className="text-gray-500 text-sm max-w-md mx-auto">
+            Find answers to popular questions about order placements, payments, and returns.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {faqs.map((faq, idx) => {
+            const isOpen = openIndex === idx;
+            return (
+              <div
+                key={idx}
+                className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all"
+              >
+                <button
+                  onClick={() => toggle(idx)}
+                  className="w-full flex items-center justify-between p-5 text-left font-semibold text-gray-900 hover:text-blue-600 transition-colors text-sm sm:text-base focus:outline-none"
+                >
+                  <span>{faq.q}</span>
+                  {isOpen ? <ChevronUp className="w-5 h-5 text-blue-600 shrink-0" /> : <ChevronDown className="w-5 h-5 text-gray-400 shrink-0" />}
+                </button>
+
+                {isOpen && (
+                  <div className="px-5 pb-5 text-sm text-gray-500 leading-relaxed border-t border-gray-50 pt-3">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

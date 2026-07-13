@@ -19,6 +19,8 @@ export interface Product {
   reviewCount: number;
   soldCount: number;
   isFeatured: boolean;
+  isFullCodEnabled?: boolean;
+  isFreeDelivery?: boolean;
   isActive: boolean;
   isFlashSale?: boolean;
   isOutOfStock?: boolean;

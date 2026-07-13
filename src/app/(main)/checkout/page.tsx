@@ -64,6 +64,16 @@ function CheckoutForm() {
     ? (buyNowItem.discountPrice ?? buyNowItem.price) * buyNowItem.quantity 
     : getTotalPrice();
 
+  const hasFullCodProduct = items.some(i => i.isFullCodEnabled);
+  const hasNormalProduct = items.some(i => !i.isFullCodEnabled);
+  const hasFreeDelivery = items.some(i => i.isFreeDelivery);
+
+  useEffect(() => {
+    if (hasFullCodProduct && !hasNormalProduct) {
+      setPaymentMethod('cod');
+    }
+  }, [hasFullCodProduct, hasNormalProduct]);
+
   const handleApplyCoupon = async () => {
     if (!couponCode) return;
     setValidatingCoupon(true);
@@ -142,6 +152,7 @@ function CheckoutForm() {
     : 0;
 
   const getShippingCharge = () => {
+    if (hasFreeDelivery) return 0;
     if (!settings) return 0;
     if (settings.districtDeliveryCharges[form.district] !== undefined) {
       return settings.districtDeliveryCharges[form.district];
@@ -217,7 +228,17 @@ function CheckoutForm() {
       // Redirect to Payment Gateway
       const paymentAmount = paymentMethod === 'cod' ? shippingCharge : total;
       
-      const res = await fetch('/api/nagorikpay/checkout', {
+      if (paymentMethod === 'cod' && paymentAmount === 0) {
+        await fetch('/api/checkout/direct-cod', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: genId })
+        });
+        window.location.href = `/order-confirmation/${genId}?source=${isBuyNow ? 'buy_now' : 'cart'}`;
+        return;
+      }
+
+      const res = await fetch('/api/zinipay/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -352,23 +373,58 @@ function CheckoutForm() {
 
           {/* Payment Method */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 border-b pb-3 border-gray-100">
-              Payment Method
-            </h2>
-            <div className="grid grid-cols-1 gap-4">
-              <label className={`relative flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'online' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
-                <div className="flex items-center gap-3">
+            <h2 className="text-xl font-extrabold text-gray-900 border-b border-gray-100 pb-4">Payment Method</h2>
+            
+            {hasFullCodProduct && !hasNormalProduct ? (
+              <div className="space-y-3">
+                <label className="relative flex items-center justify-between p-4 border rounded-xl cursor-pointer border-blue-600 bg-blue-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-sm">Cash On Delivery</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">Pay after receiving the product</p>
+                    </div>
+                  </div>
+                  <input type="radio" name="payment" value="cod" checked={true} onChange={() => setPaymentMethod('cod')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                </label>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className={`relative flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'online' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${paymentMethod === 'online' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-sm">Online Payment</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">Pay with bKash/Nagad/Card</p>
+                    </div>
+                  </div>
                   <input type="radio" name="payment" value="online" checked={paymentMethod === 'online'} onChange={() => setPaymentMethod('online')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                  <span className="font-semibold text-sm text-gray-900">Online Payment (Full Amount)</span>
-                </div>
-              </label>
-              <label className={`relative flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
-                <div className="flex items-center gap-3">
+                </label>
+
+                <label className={`relative flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${paymentMethod === 'cod' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-sm">Cash On Delivery</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">Pay advance delivery charge</p>
+                    </div>
+                  </div>
                   <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                  <span className="font-semibold text-sm text-gray-900">Cash on Delivery (Pay Delivery Charge Only)</span>
-                </div>
-              </label>
-            </div>
+                </label>
+              </div>
+            )}
+            
+            {hasFullCodProduct && hasNormalProduct && (
+              <div className="mt-4 p-3 bg-blue-50 text-blue-800 text-xs rounded-xl border border-blue-100 leading-relaxed">
+                <strong>Note:</strong> One product you can order without advance payment (fully COD), but since your cart contains other products that are not eligible for free advance COD, you have to pay the minimum delivery charge advance.
+              </div>
+            )}
           </div>
         </div>
 
