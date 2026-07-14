@@ -15,6 +15,46 @@ import SizeSelector from '@/components/product/SizeSelector';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
+const parseInline = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+};
+
+const renderDescription = (text: string) => {
+  if (!text) return null;
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-1">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('# ')) {
+          return <h3 key={idx} className="font-bold text-gray-900 text-lg mt-5 mb-2">{parseInline(trimmed.slice(2))}</h3>;
+        }
+        if (trimmed.startsWith('## ')) {
+          return <h4 key={idx} className="font-bold text-gray-900 text-base mt-4 mb-1">{parseInline(trimmed.slice(3))}</h4>;
+        }
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          return (
+            <div key={idx} className="flex gap-2 items-start ml-2 mb-1.5">
+              <span className="text-blue-500 font-bold mt-0.5">•</span>
+              <span className="text-gray-700">{parseInline(trimmed.slice(2))}</span>
+            </div>
+          );
+        }
+        if (trimmed === '') {
+          return <div key={idx} className="h-2"></div>;
+        }
+        return <p key={idx} className="text-gray-600 leading-relaxed">{parseInline(line)}</p>;
+      })}
+    </div>
+  );
+};
+
 export default function ProductDetailClient({ initialSlug }: { initialSlug: string }) {
   const router = useRouter();
   const slug = initialSlug;
@@ -403,10 +443,8 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
         </div>
 
         {activeTab === 'details' && (
-          <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
-            <p className="whitespace-pre-wrap">
-              {product.description}
-            </p>
+          <div className="text-sm">
+            {renderDescription(product.description)}
           </div>
         )}
 
