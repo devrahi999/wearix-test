@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, ShoppingCart, Star, ShieldCheck, Truck, RefreshCw, AlertCircle, Check, Loader2 } from 'lucide-react';
-import { getProductBySlug, getProducts, getReviewsByProduct, submitReview, type ProductReview } from '@/lib/db';
+import { getProductBySlug, getProducts, getReviewsByProduct, submitReview, listenToPromotionSettings, type ProductReview, type PromotionSettings } from '@/lib/db';
 import type { Product } from '@/types/product';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
@@ -13,6 +13,7 @@ import { formatPrice, discountPercent } from '@/lib/utils';
 import ProductGrid from '@/components/product/ProductGrid';
 import SizeSelector from '@/components/product/SizeSelector';
 import { useAuth } from '@/context/AuthContext';
+import { isPromotionActive } from '@/lib/promotions';
 import toast from 'react-hot-toast';
 
 const parseInline = (text: string) => {
@@ -75,6 +76,12 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
   const [addedNotify, setAddedNotify] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, text: '' });
+  const [promotions, setPromotions] = useState<PromotionSettings | null>(null);
+
+  useEffect(() => {
+    const unsub = listenToPromotionSettings(setPromotions);
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     setPageLoading(true);
@@ -186,8 +193,6 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
     });
     router.push('/checkout?buyNow=true');
   };
-
-  // related products already fetched in useEffect
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -312,6 +317,22 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
                 </>
               )}
             </div>
+
+            {/* Promotional Badges */}
+            {promotions && (
+              <div className="space-y-2 py-1">
+                {isPromotionActive(promotions.buyMoreEnabled, promotions.buyMoreStartDate, promotions.buyMoreEndDate) && (
+                  <div className="bg-red-50 text-red-700 text-xs font-bold px-3 py-2 rounded-lg border border-red-100 flex items-center gap-2">
+                    <span className="text-sm">🔥</span> {promotions.buyMoreTitle} - {promotions.buyMoreDesc}
+                  </div>
+                )}
+                {isPromotionActive(promotions.freeDeliveryEnabled, promotions.freeDeliveryStartDate, promotions.freeDeliveryEndDate) && (
+                  <div className="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-2 rounded-lg border border-emerald-100 flex items-center gap-2">
+                    <span className="text-sm">🚚</span> {promotions.freeDeliveryTitle} - {promotions.freeDeliveryDesc}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Colors Chips */}
             {product.colors.length > 0 && (

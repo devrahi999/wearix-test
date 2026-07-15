@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, ShoppingBag, FolderTree, ClipboardList, Users, Ticket,
-  Settings, LogOut, ChevronRight, Image as ImageIcon, Zap, Loader2, ShieldAlert, Menu, X, MessageSquare, Star
+  Settings, LogOut, ChevronRight, Image as ImageIcon, Zap, Loader2, ShieldAlert, Menu, X, MessageSquare, Star, TrendingUp
 } from 'lucide-react';
 import { SITE_NAME } from '@/constants';
 import { useAuth } from '@/context/AuthContext';
@@ -25,7 +25,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems = [
     { label: 'Overview', href: '/wxadmin', icon: LayoutDashboard },
+    { label: 'Campaign Management', href: '/wxadmin/campaign', icon: Zap },
     { label: 'Products', href: '/wxadmin/products', icon: ShoppingBag },
+    { label: 'Product Profits', href: '/wxadmin/profits', icon: TrendingUp },
     { label: 'Categories', href: '/wxadmin/categories', icon: FolderTree },
     { label: 'Orders', href: '/wxadmin/orders', icon: ClipboardList },
     { label: 'Users', href: '/wxadmin/customers', icon: Users },

@@ -10,8 +10,10 @@ import { ShoppingBag, ArrowRight, ShieldCheck, Check, AlertCircle, Loader2, Phon
 import { 
   getStoreSettings, type StoreSettings, 
   getCouponByCode, type Coupon, 
-  createOrder, hasUserUsedCoupon, recordCouponUsage, getProducts, deleteOrder 
+  createOrder, hasUserUsedCoupon, recordCouponUsage, getProducts, deleteOrder,
+  listenToPromotionSettings, type PromotionSettings
 } from '@/lib/db';
+import { calculateBuyMoreDiscount, calculateFreeDelivery } from '@/lib/promotions';
 import { useAuth } from '@/context/AuthContext';
 
 function CheckoutForm() {
@@ -24,9 +26,12 @@ function CheckoutForm() {
   const items = isBuyNow && buyNowItem ? [buyNowItem] : cartItems;
 
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [promotions, setPromotions] = useState<PromotionSettings | null>(null);
 
   useEffect(() => {
     getStoreSettings().then(setSettings);
+    const unsub = listenToPromotionSettings(setPromotions);
+    return () => unsub();
   }, []);
 
   const [form, setForm] = useState(() => {
@@ -145,14 +150,21 @@ function CheckoutForm() {
 
   const removeCoupon = () => setAppliedCoupon(null);
 
-  const discount = appliedCoupon 
+  const couponDiscount = appliedCoupon 
     ? (appliedCoupon.discountType === 'percent' 
         ? cartSubtotal * (appliedCoupon.discountValue / 100)
         : appliedCoupon.discountValue)
     : 0;
 
+  const totalItemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const buyMoreResult = calculateBuyMoreDiscount(cartSubtotal, totalItemsCount, promotions);
+  const totalDiscount = couponDiscount + buyMoreResult.discountAmount;
+  
+  const subtotalAfterDiscounts = cartSubtotal - totalDiscount;
+  const freeDeliveryResult = calculateFreeDelivery(subtotalAfterDiscounts, promotions, hasFreeDelivery);
+
   const getShippingCharge = () => {
-    if (hasFreeDelivery) return 0;
+    if (freeDeliveryResult.isFreeDelivery) return 0;
     if (!settings) return 0;
     if (settings.districtDeliveryCharges[form.district] !== undefined) {
       return settings.districtDeliveryCharges[form.district];
@@ -161,7 +173,7 @@ function CheckoutForm() {
   };
 
   const shippingCharge = getShippingCharge();
-  const total = cartSubtotal - discount + shippingCharge;
+  const total = cartSubtotal - totalDiscount + shippingCharge;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,7 +220,7 @@ function CheckoutForm() {
         })),
         subtotal: cartSubtotal,
         shippingFee: shippingCharge,
-        discount: discount,
+        discount: totalDiscount,
         total: total,
         paymentMethod: paymentMethod,
         orderStatus: 'processing' as const,
@@ -489,13 +501,21 @@ function CheckoutForm() {
                 <span className="font-semibold text-gray-900">{formatPrice(cartSubtotal)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-600">
-                <span>Delivery Charge</span>
-                <span className="font-semibold text-gray-900">{formatPrice(shippingCharge)}</span>
+                <span>Delivery</span>
+                <span className={freeDeliveryResult.isFreeDelivery ? "font-bold text-green-600" : "font-semibold text-gray-900"}>
+                  {freeDeliveryResult.isFreeDelivery ? 'FREE' : formatPrice(shippingCharge)}
+                </span>
               </div>
               {appliedCoupon && (
                 <div className="flex justify-between text-sm text-green-600 font-medium">
-                  <span>Discount ({appliedCoupon.code})</span>
-                  <span>-{formatPrice(discount)}</span>
+                  <span>Coupon Discount ({appliedCoupon.code})</span>
+                  <span>-{formatPrice(couponDiscount)}</span>
+                </div>
+              )}
+              {buyMoreResult.qualified && (
+                <div className="flex justify-between text-sm text-red-600 font-medium">
+                  <span>Extra Discount ({promotions?.buyMoreDiscountPct}%)</span>
+                  <span>-{formatPrice(buyMoreResult.discountAmount)}</span>
                 </div>
               )}
               

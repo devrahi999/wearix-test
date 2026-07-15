@@ -6,8 +6,9 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { formatPrice } from '@/lib/utils';
-import { Trash2, ShoppingBag, ArrowRight, Check, AlertCircle } from 'lucide-react';
-import { getStoreSettings, type StoreSettings } from '@/lib/db';
+import { Trash2, ShoppingBag, ArrowRight, Check, AlertCircle, TrendingUp, Truck } from 'lucide-react';
+import { getStoreSettings, type StoreSettings, listenToPromotionSettings, type PromotionSettings } from '@/lib/db';
+import { calculateBuyMoreDiscount, calculateFreeDelivery } from '@/lib/promotions';
 
 function CartPageContent() {
   const { items, updateQuantity, removeItem, getTotalPrice, getSubtotal } = useCartStore();
@@ -17,13 +18,24 @@ function CartPageContent() {
   const isCancelled = searchParams.get('cancel') === 'true';
 
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [promotions, setPromotions] = useState<PromotionSettings | null>(null);
 
   useEffect(() => {
     getStoreSettings().then(setSettings);
+    const unsub = listenToPromotionSettings(setPromotions);
+    return () => unsub();
   }, []);
 
-  const shippingFee = settings?.defaultDeliveryCharge || 0;
-  const total = Math.max(0, discountedSubtotal + shippingFee);
+  const totalItemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const buyMoreResult = calculateBuyMoreDiscount(discountedSubtotal, totalItemsCount, promotions);
+  const subtotalAfterDiscounts = discountedSubtotal - buyMoreResult.discountAmount;
+
+  const hasFreeDeliveryProduct = items.some(item => item.isFreeDelivery);
+  const freeDeliveryResult = calculateFreeDelivery(subtotalAfterDiscounts, promotions, hasFreeDeliveryProduct);
+
+  const shippingFee = freeDeliveryResult.isFreeDelivery ? 0 : (settings?.defaultDeliveryCharge || 0);
+  const total = Math.max(0, subtotalAfterDiscounts + shippingFee);
 
   if (items.length === 0) {
     return (
@@ -56,6 +68,52 @@ function CartPageContent() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
         <ShoppingBag className="w-8 h-8 text-blue-600" /> Shopping Cart
       </h1>
+
+      {/* Promotion Banners */}
+      {promotions && (buyMoreResult.isActive || freeDeliveryResult.isActive) && (
+        <div className="mb-6 space-y-3">
+          {buyMoreResult.isActive && (
+            <div className={`p-4 rounded-xl border flex items-center gap-3 ${buyMoreResult.qualified ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-red-100 text-gray-600 shadow-sm'}`}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-red-100 text-red-600">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-red-600">{promotions.buyMoreTitle}</h3>
+                <p className="text-xs mt-0.5">
+                  {buyMoreResult.qualified ? (
+                    <span className="font-semibold">🎉 Congratulations! Extra {promotions.buyMoreDiscountPct}% discount has been applied.</span>
+                  ) : (
+                    <span>Add {promotions.buyMoreMinQty - totalItemsCount} more item(s) to unlock an extra {promotions.buyMoreDiscountPct}% discount.</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {freeDeliveryResult.isActive && !hasFreeDeliveryProduct && (
+            <div className={`p-4 rounded-xl border flex items-center gap-3 ${freeDeliveryResult.qualified ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-emerald-100 text-gray-600 shadow-sm'}`}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600">
+                <Truck className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-sm text-emerald-600">{promotions.freeDeliveryTitle}</h3>
+                <p className="text-xs mt-0.5">
+                  {freeDeliveryResult.qualified ? (
+                    <span className="font-semibold">🚚 Congratulations! You unlocked FREE Delivery.</span>
+                  ) : (
+                    <span>Add {formatPrice(promotions.freeDeliveryMinOrder - subtotalAfterDiscounts)} more to unlock FREE Delivery.</span>
+                  )}
+                </p>
+                {!freeDeliveryResult.qualified && (
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                    <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (subtotalAfterDiscounts / promotions.freeDeliveryMinOrder) * 100)}%` }}></div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items List */}
@@ -151,15 +209,21 @@ function CartPageContent() {
                   <span>-{formatPrice(subtotal - discountedSubtotal)}</span>
                 </div>
               )}
+              {buyMoreResult.qualified && (
+                <div className="flex justify-between text-red-600 font-medium">
+                  <span>Extra Discount ({promotions?.buyMoreDiscountPct}%)</span>
+                  <span>-{formatPrice(buyMoreResult.discountAmount)}</span>
+                </div>
+              )}
 
               <div className="flex justify-between">
-                <span>Estimated Shipping</span>
+                <span>Delivery</span>
                 <span>
-                  {settings ? (shippingFee === 0 ? (
-                    <span className="text-green-600 font-semibold">FREE</span>
-                  ) : (
+                  {freeDeliveryResult.isFreeDelivery ? (
+                    <span className="text-green-600 font-bold tracking-wide">FREE</span>
+                  ) : settings ? (
                     formatPrice(shippingFee)
-                  )) : (
+                  ) : (
                     <span className="text-gray-400">Calculated at checkout</span>
                   )}
                 </span>

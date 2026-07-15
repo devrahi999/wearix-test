@@ -8,6 +8,7 @@ export interface OrderItem {
   productImage: string;
   size: string;
   color?: string;
+  basePrice?: number;
   quantity: number;
   price: number;
   discountPrice?: number;

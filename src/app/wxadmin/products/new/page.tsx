@@ -32,6 +32,7 @@ export default function NewProductPage() {
     description: '',
     category: '',
     gender: 'men' as 'men' | 'women' | 'kids' | 'unisex',
+    basePrice: '',
     price: '',
     discountPrice: '',
     rating: '5.0',
@@ -100,6 +101,7 @@ export default function NewProductPage() {
         category: selectedCategories[0] || '',
         categories: selectedCategories,
         gender: form.gender,
+        basePrice: form.basePrice ? Number(form.basePrice) : undefined,
         price: Number(form.price),
         discountPrice: form.discountPrice ? Number(form.discountPrice) : null,
         images,
@@ -217,7 +219,13 @@ export default function NewProductPage() {
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Price (BDT) *</label>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Base Price / Buying Price (Admin only)</label>
+              <input type="number" min="0" value={form.basePrice} onChange={e => setForm({...form, basePrice: e.target.value})}
+                placeholder="Optional (Used for profit calculation)"
+                className="w-full border border-gray-200 px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50/50" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Regular Price (BDT) *</label>
               <input required type="number" min="0" value={form.price} onChange={e => setForm({...form, price: e.target.value})}
                 className="w-full border border-gray-200 px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>

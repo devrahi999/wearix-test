@@ -162,7 +162,8 @@ export async function createOrder(data: Partial<Order> & Omit<Order, 'id' | 'cre
         const prodRef = doc(db, 'products', item.productId);
         try {
           await updateDoc(prodRef, {
-            soldCount: increment(item.quantity)
+            soldCount: increment(item.quantity),
+            realSoldCount: increment(item.quantity)
           });
         } catch (err) {
           console.error("Failed to increment soldCount for product", item.productId, err);
@@ -439,6 +440,61 @@ export async function getMarketingSettings(): Promise<MarketingSettings> {
 
 export async function updateMarketingSettings(data: MarketingSettings) {
   await setDoc(doc(db, 'config', 'marketing'), data);
+}
+
+// ─── PROMOTION SETTINGS ──────────────────────────────────────────────────────
+export interface PromotionSettings {
+  buyMoreEnabled: boolean;
+  buyMoreMinQty: number;
+  buyMoreDiscountPct: number;
+  buyMoreTitle: string;
+  buyMoreDesc: string;
+  buyMoreStartDate: string;
+  buyMoreEndDate: string;
+
+  freeDeliveryEnabled: boolean;
+  freeDeliveryMinOrder: number;
+  freeDeliveryTitle: string;
+  freeDeliveryDesc: string;
+  freeDeliveryStartDate: string;
+  freeDeliveryEndDate: string;
+}
+
+const defaultPromotions: PromotionSettings = {
+  buyMoreEnabled: false,
+  buyMoreMinQty: 2,
+  buyMoreDiscountPct: 5,
+  buyMoreTitle: 'Buy More & Save More',
+  buyMoreDesc: 'Buy 2 or more items and get an extra 5% OFF.',
+  buyMoreStartDate: '',
+  buyMoreEndDate: '',
+
+  freeDeliveryEnabled: false,
+  freeDeliveryMinOrder: 1499,
+  freeDeliveryTitle: 'Free Delivery',
+  freeDeliveryDesc: 'Free delivery on orders above ৳1499.',
+  freeDeliveryStartDate: '',
+  freeDeliveryEndDate: '',
+};
+
+export async function getPromotionSettings(): Promise<PromotionSettings> {
+  const snap = await getDoc(doc(db, 'config', 'promotions'));
+  if (!snap.exists()) return defaultPromotions;
+  return { ...defaultPromotions, ...snap.data() };
+}
+
+export async function updatePromotionSettings(data: PromotionSettings) {
+  await setDoc(doc(db, 'config', 'promotions'), data);
+}
+
+export function listenToPromotionSettings(callback: (data: PromotionSettings) => void) {
+  return onSnapshot(doc(db, 'config', 'promotions'), (snap) => {
+    if (snap.exists()) {
+      callback({ ...defaultPromotions, ...snap.data() } as PromotionSettings);
+    } else {
+      callback(defaultPromotions);
+    }
+  });
 }
 
 export function listenToMarketingSettings(callback: (data: MarketingSettings) => void) {

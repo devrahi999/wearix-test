@@ -11,6 +11,7 @@ export interface Product {
   gender: Gender;
   price: number;
   discountPrice?: number | null;
+  basePrice?: number;
   images: string[];
   sizes: string[];
   colors: string[];
@@ -19,6 +20,7 @@ export interface Product {
   rating: number;
   reviewCount: number;
   soldCount: number;
+  realSoldCount?: number;
   isFeatured: boolean;
   isFullCodEnabled?: boolean;
   isFreeDelivery?: boolean;
