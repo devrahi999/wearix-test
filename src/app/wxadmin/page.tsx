@@ -238,11 +238,11 @@ export default function AdminDashboardPage() {
                   <div key={o.id} className="flex items-center justify-between p-3 bg-gray-50/50 hover:bg-gray-50 rounded-xl transition border border-transparent hover:border-gray-100">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                        <span className="font-bold text-sm">{o.customerInfo.firstName.charAt(0)}</span>
+                        <span className="font-bold text-sm">{(o.customerName || o.shippingAddress.fullName || 'U').charAt(0)}</span>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-900">{o.customerInfo.firstName} {o.customerInfo.lastName}</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5">#{o.id.slice(0,6).toUpperCase()}</p>
+                        <p className="text-xs font-bold text-gray-900">{o.customerName || o.shippingAddress.fullName}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">#{o.id.slice(0,8).toUpperCase()}</p>
                       </div>
                     </div>
                     <div className="text-right">
