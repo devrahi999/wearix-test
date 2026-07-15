@@ -1,7 +1,7 @@
 import { db } from './firebase';
 import { 
   collection, doc, getDoc, getDocs, query, where, orderBy, 
-  setDoc, updateDoc, deleteDoc, runTransaction, limit as fsLimit, increment, arrayUnion, onSnapshot
+  setDoc, updateDoc, deleteDoc, runTransaction, limit as fsLimit, increment, arrayUnion, onSnapshot, writeBatch
 } from 'firebase/firestore';
 import type { Product, Category } from '@/types/product';
 import type { Order } from '@/types/order';
