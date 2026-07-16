@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     default: `${SITE_NAME} — ${SITE_TAGLINE}`,
     template: `%s | ${SITE_NAME}`,
   },
-  description: 'Shop shirts, t-shirts, jerseys, pants, panjabi, hoodies, polos, women\'s fashion, kids\' wear, and accessories in Bangladesh.',
+  description: 'Bangladesh\'s premium fashion destination. We are an e-commerce platform dedicated to providing high-quality clothing, apparel, and fashion accessories for men, women, and kids.',
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
@@ -30,10 +30,10 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: SITE_NAME,
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
-    description: 'Shop shirts, t-shirts, jerseys, pants, panjabi, hoodies, polos, women\'s fashion, kids\' wear, and accessories in Bangladesh.',
+    description: 'Bangladesh\'s premium fashion destination. We are an e-commerce platform dedicated to providing high-quality clothing, apparel, and fashion accessories for men, women, and kids.',
     images: [
       {
-        url: '/logo.png', // Ideally this should be a proper OG banner
+        url: '/logo.png', // Using logo.png as requested
         width: 1200,
         height: 630,
         alt: SITE_NAME,
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
-    description: 'Shop shirts, t-shirts, jerseys, pants, panjabi, hoodies, polos, women\'s fashion, kids\' wear, and accessories in Bangladesh.',
+    description: 'Bangladesh\'s premium fashion destination. We are an e-commerce platform dedicated to providing high-quality clothing, apparel, and fashion accessories for men, women, and kids.',
     images: ['/logo.png'],
   },
   robots: {
