@@ -71,17 +71,18 @@ export default function Navbar() {
           </div>
 
           {/* Center: Logo */}
-          <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center group">
-            <div className="relative w-36 h-12 md:w-48 md:h-16 transition-transform group-hover:scale-105">
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 group">
+            <div className="relative w-10 h-10 md:w-12 md:h-12 transition-transform group-hover:scale-105">
               <Image 
                 src="/logo.png" 
                 alt={SITE_NAME}
                 fill
-                sizes="(max-width: 768px) 144px, 192px"
+                sizes="48px"
                 className="object-contain"
                 priority
               />
             </div>
+            <span className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{SITE_NAME}</span>
           </Link>
 
           {/* Right: Actions (Search, Wishlist) */}

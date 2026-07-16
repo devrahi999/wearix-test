@@ -73,6 +73,14 @@ export default function HomeClient() {
         <HeroSlider banners={heroBanners} />
       </motion.div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
+        <div className="bg-white/60 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 md:p-6 text-center shadow-sm">
+          <p className="text-gray-600 text-sm md:text-base leading-relaxed max-w-3xl mx-auto">
+            <strong className="text-gray-900 font-bold">Wearix</strong> is an online fashion store in Bangladesh offering premium-quality apparel, including polo shirts, t-shirts, shirts, panjabi, hoodies, pants, and more.
+          </p>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 mt-8">
         <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}>
           <CategoryShortcuts />

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     default: `${SITE_NAME} — ${SITE_TAGLINE}`,
     template: `%s | ${SITE_NAME}`,
   },
-  description: 'Bangladesh\'s premium fashion destination. We are an e-commerce platform dedicated to providing high-quality clothing, apparel, and fashion accessories for men, women, and kids.',
+  description: 'Wearix is an online fashion store in Bangladesh offering premium-quality men\'s apparel, including polo shirts, t-shirts, shirts, tank tops, and more.',
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: SITE_NAME,
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
-    description: 'Bangladesh\'s premium fashion destination. We are an e-commerce platform dedicated to providing high-quality clothing, apparel, and fashion accessories for men, women, and kids.',
+    description: 'Wearix is an online fashion store in Bangladesh offering premium-quality men\'s apparel, including polo shirts, t-shirts, shirts, tank tops, and more.',
     images: [
       {
         url: '/logo.png', // Using logo.png as requested
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
-    description: 'Bangladesh\'s premium fashion destination. We are an e-commerce platform dedicated to providing high-quality clothing, apparel, and fashion accessories for men, women, and kids.',
+    description: 'Wearix is an online fashion store in Bangladesh offering premium-quality men\'s apparel, including polo shirts, t-shirts, shirts, tank tops, and more.',
     images: ['/logo.png'],
   },
   robots: {
