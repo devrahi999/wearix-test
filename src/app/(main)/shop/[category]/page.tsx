@@ -40,8 +40,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+import { getProducts } from '@/lib/db';
+
 export default async function CategoryPage({ params }: Props) {
   const { category } = await params;
+  
+  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+  const categoryInfo = categories.find(c => c.slug.toLowerCase() === category.toLowerCase()) || null;
+  const activeProds = products.filter(p => p.isActive);
+  
+  const categoryProducts = categoryInfo 
+    ? activeProds.filter(p => {
+        const matchPrimary = p.category === categoryInfo.slug || p.category === categoryInfo.name || p.category.toLowerCase() === category.toLowerCase();
+        const matchSecondary = p.categories?.some(c => c === categoryInfo.slug || c === categoryInfo.name || c.toLowerCase() === category.toLowerCase());
+        return matchPrimary || matchSecondary;
+      })
+    : activeProds.filter(p => p.category.toLowerCase() === category.toLowerCase() || p.categories?.some(c => c.toLowerCase() === category.toLowerCase()));
+
   // Schema.org CollectionPage
   const titleName = category.charAt(0).toUpperCase() + category.slice(1);
   const collectionJsonLd = {
@@ -86,7 +101,11 @@ export default async function CategoryPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([collectionJsonLd, breadcrumbJsonLd]) }}
       />
-      <CategoryClient categorySlug={category} />
+      <CategoryClient 
+        categorySlug={category} 
+        initialProducts={categoryProducts}
+        initialCategoryInfo={categoryInfo}
+      />
     </>
   );
 }

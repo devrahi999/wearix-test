@@ -11,11 +11,17 @@ import Link from 'next/link';
 import { getProducts, getCategories } from '@/lib/db';
 import type { Category } from '@/types/product';
 
-export default function CategoryClient({ categorySlug }: { categorySlug: string }) {
+interface CategoryClientProps {
+  categorySlug: string;
+  initialProducts?: Product[];
+  initialCategoryInfo?: Category | null;
+}
 
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [categoryInfo, setCategoryInfo] = useState<Category | null>(null);
-  const [dbLoading, setDbLoading] = useState(true);
+export default function CategoryClient({ categorySlug, initialProducts = [], initialCategoryInfo = null }: CategoryClientProps) {
+
+  const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
+  const [categoryInfo, setCategoryInfo] = useState<Category | null>(initialCategoryInfo);
+  const [dbLoading, setDbLoading] = useState(initialProducts.length === 0);
 
   useEffect(() => {
     Promise.all([

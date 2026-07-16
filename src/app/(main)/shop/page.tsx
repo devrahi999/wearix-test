@@ -25,7 +25,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ShopPage() {
+import { getProducts, getCategories } from '@/lib/db';
+
+export default async function ShopPage() {
+  const [products, categories] = await Promise.all([getProducts(), getCategories()]);
+  const activeProducts = products.filter(p => p.isActive);
+
   const collectionJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -62,7 +67,7 @@ export default function ShopPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([collectionJsonLd, breadcrumbJsonLd]) }}
       />
-      <ShopClient />
+      <ShopClient initialProducts={activeProducts} initialCategories={categories} />
     </>
   );
 }

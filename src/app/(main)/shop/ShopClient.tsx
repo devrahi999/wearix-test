@@ -8,7 +8,7 @@ import { formatPrice } from '@/lib/utils';
 import { Grid, ListFilter, SlidersHorizontal, X, Loader2 } from 'lucide-react';
 import { getProducts, getCategories } from '@/lib/db';
 
-export default function ShopClient() {
+export default function ShopClient({ initialProducts = [], initialCategories = [] }: { initialProducts?: Product[], initialCategories?: Category[] }) {
   const [filters, setFilters] = useState<ProductFilters>({
     sizes: [],
     colors: [],
@@ -17,10 +17,10 @@ export default function ShopClient() {
   const [selectedGender, setSelectedGender] = useState<Gender | 'all'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [maxPrice, setMaxPrice] = useState<number>(3000);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [dbLoading, setDbLoading] = useState(true);
+  const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
+  const [dbLoading, setDbLoading] = useState(initialProducts.length === 0);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
 

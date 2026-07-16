@@ -9,8 +9,18 @@ export const metadata: Metadata = {
   },
 };
 
+import { getProducts, getHeroBanners, getPromoBanners, getFlashSaleConfig } from '@/lib/db';
+
 export default async function HomePage() {
-  const storeSettings = await getStoreSettings();
+  const [storeSettings, products, heroBanners, promoBanners, flashSale] = await Promise.all([
+    getStoreSettings(),
+    getProducts(),
+    getHeroBanners(),
+    getPromoBanners(),
+    getFlashSaleConfig(),
+  ]);
+
+  const activeProducts = products.filter(p => p.isActive);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -38,7 +48,12 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, webSiteJsonLd]) }}
       />
-      <HomeClient />
+      <HomeClient 
+        initialProducts={activeProducts} 
+        initialHeroBanners={heroBanners}
+        initialPromoBanners={promoBanners}
+        initialFlashSale={flashSale}
+      />
     </>
   );
 }

@@ -21,26 +21,53 @@ const fadeInUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } }
 };
 
-export default function HomeClient() {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
-  const [topProducts, setTopProducts] = useState<Product[]>([]);
-  const [randomProducts, setRandomProducts] = useState<Product[]>([]);
-  const [heroBanners, setHeroBanners] = useState<HeroBanner[]>([]);
-  const [promoBanners, setPromoBanners] = useState<PromoBanner[]>([]);
-  const [flashSale, setFlashSale] = useState<FlashSaleConfig | null>(null);
+interface HomeClientProps {
+  initialProducts?: Product[];
+  initialHeroBanners?: HeroBanner[];
+  initialPromoBanners?: PromoBanner[];
+  initialFlashSale?: FlashSaleConfig | null;
+}
+
+export default function HomeClient({ 
+  initialProducts = [],
+  initialHeroBanners = [],
+  initialPromoBanners = [],
+  initialFlashSale = null,
+}: HomeClientProps) {
+  // Pre-calculate initial sections
+  const initialFeatured = initialProducts.filter(p => p.isFeatured).slice(0, 8);
+  const initialNew = initialProducts.slice(0, 4);
+  const initialTop = [...initialProducts].sort((a, b) => ((b.soldCount || 0) * 10 + (b.rating || 0)) - ((a.soldCount || 0) * 10 + (a.rating || 0))).slice(0, 4);
+
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(initialFeatured);
+  const [newArrivals, setNewArrivals] = useState<Product[]>(initialNew);
+  const [topProducts, setTopProducts] = useState<Product[]>(initialTop);
+  const [randomProducts, setRandomProducts] = useState<Product[]>(() => {
+    if (initialProducts.length > 0) {
+      // It might cause hydration mismatch if random on server differs from client.
+      // But since it runs only on client (or server generates some random order), it's fine for now.
+      // To strictly avoid hydration mismatch, we should set it in a useEffect.
+      return []; 
+    }
+    return [];
+  });
+  const [heroBanners, setHeroBanners] = useState<HeroBanner[]>(initialHeroBanners);
+  const [promoBanners, setPromoBanners] = useState<PromoBanner[]>(initialPromoBanners);
+  const [flashSale, setFlashSale] = useState<FlashSaleConfig | null>(initialFlashSale);
 
   useEffect(() => {
+    if (initialProducts.length > 0) {
+      setRandomProducts([...initialProducts].sort(() => 0.5 - Math.random()).slice(0, 8));
+    }
+
     const unsubProducts = listenToProducts(data => {
       const active = data.filter(p => p.isActive);
       setFeaturedProducts(active.filter(p => p.isFeatured).slice(0, 8));
       setNewArrivals(active.slice(0, 4));
       
-      // Random 8 products
       const shuffled = [...active].sort(() => 0.5 - Math.random());
       setRandomProducts(shuffled.slice(0, 8));
 
-      // Top 4 Selling/Rated products
       const sortedByTop = [...active].sort((a, b) => {
         const scoreA = (a.soldCount || 0) * 10 + (a.rating || 0);
         const scoreB = (b.soldCount || 0) * 10 + (b.rating || 0);
@@ -59,7 +86,7 @@ export default function HomeClient() {
       unsubPromo();
       unsubFlash();
     };
-  }, []);
+  }, [initialProducts]);
 
   return (
     <div className="pb-8 overflow-x-hidden">

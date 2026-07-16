@@ -56,7 +56,19 @@ const renderDescription = (text: string) => {
   );
 };
 
-export default function ProductDetailClient({ initialSlug }: { initialSlug: string }) {
+interface ProductDetailClientProps {
+  initialSlug: string;
+  initialProduct?: Product | null;
+  initialRelatedProducts?: Product[];
+  initialReviews?: ProductReview[];
+}
+
+export default function ProductDetailClient({ 
+  initialSlug,
+  initialProduct = null,
+  initialRelatedProducts = [],
+  initialReviews = []
+}: ProductDetailClientProps) {
   const router = useRouter();
   const slug = initialSlug;
 
@@ -64,15 +76,15 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
   const { toggleWishlist, isWishlisted } = useWishlistStore();
   const { user } = useAuth();
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [reviews, setReviews] = useState<ProductReview[]>([]);
-  const [pageLoading, setPageLoading] = useState(true);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [product, setProduct] = useState<Product | null>(initialProduct);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>(initialRelatedProducts);
+  const [reviews, setReviews] = useState<ProductReview[]>(initialReviews);
+  const [pageLoading, setPageLoading] = useState(initialProduct === null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(initialProduct?.sizes?.[0] || null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(initialProduct?.colors?.[0] || null);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'details' | 'size-chart' | 'reviews'>('details');
-  const [activeImage, setActiveImage] = useState<string>('');
+  const [activeImage, setActiveImage] = useState<string>(initialProduct?.images?.[0] || '');
   const [addedNotify, setAddedNotify] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, text: '' });
@@ -84,27 +96,29 @@ export default function ProductDetailClient({ initialSlug }: { initialSlug: stri
   }, []);
 
   useEffect(() => {
-    setPageLoading(true);
-    getProductBySlug(slug).then(p => {
-      if (p) {
-        setProduct(p);
-        setSelectedSize(p.sizes[0] || null);
-        setSelectedColor(p.colors[0] || null);
-        setActiveImage(p.images[0] || '');
-        // related products
-        getProducts().then(all => {
-          const related = all.filter(r => 
-            r.id !== p.id && r.isActive && 
-            (r.category === p.category || (p.categories && r.categories?.some(c => p.categories!.includes(c))))
-          ).slice(0, 4);
-          setRelatedProducts(related);
-        });
-        // reviews
-        getReviewsByProduct(p.id).then(r => setReviews(r));
-      }
-      setPageLoading(false);
-    });
-  }, [slug]);
+    if (!initialProduct) {
+      setPageLoading(true);
+      getProductBySlug(slug).then(p => {
+        if (p) {
+          setProduct(p);
+          setSelectedSize(p.sizes[0] || null);
+          setSelectedColor(p.colors[0] || null);
+          setActiveImage(p.images[0] || '');
+          // related products
+          getProducts().then(all => {
+            const related = all.filter(r => 
+              r.id !== p.id && r.isActive && 
+              (r.category === p.category || (p.categories && r.categories?.some(c => p.categories!.includes(c))))
+            ).slice(0, 4);
+            setRelatedProducts(related);
+          });
+          // reviews
+          getReviewsByProduct(p.id).then(r => setReviews(r));
+        }
+        setPageLoading(false);
+      });
+    }
+  }, [slug, initialProduct]);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

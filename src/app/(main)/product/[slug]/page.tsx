@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getProductBySlug } from '@/lib/db';
+import { getProductBySlug, getProducts, getReviewsByProduct } from '@/lib/db';
 import ProductDetailClient from './ProductDetailClient';
 import { notFound } from 'next/navigation';
 import { SITE_NAME, SITE_URL } from '@/constants';
@@ -113,13 +113,25 @@ export default async function ProductPage({ params }: Props) {
     ]
   };
 
+  const allProducts = await getProducts();
+  const related = allProducts.filter(r => 
+    r.id !== product.id && r.isActive && 
+    (r.category === product.category || (product.categories && r.categories?.some(c => product.categories!.includes(c))))
+  ).slice(0, 4);
+  const reviews = await getReviewsByProduct(product.id);
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([productJsonLd, breadcrumbJsonLd]) }}
       />
-      <ProductDetailClient initialSlug={slug} />
+      <ProductDetailClient 
+        initialSlug={slug} 
+        initialProduct={product}
+        initialRelatedProducts={related}
+        initialReviews={reviews}
+      />
     </>
   );
 }
