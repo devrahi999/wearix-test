@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(req: Request) {
   try {
@@ -9,6 +10,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'ZINIPAY_API_KEY not found in env' }, { status: 500 });
     }
 
+    const orderDoc = await adminDb.collection('orders').doc(orderId).get();
+    if (!orderDoc.exists) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+    const orderData = orderDoc.data();
+    const cusName = orderData?.shippingAddress?.fullName || 'Customer';
+    const cusEmail = orderData?.shippingAddress?.email || 'customer@wearixbd.store';
+
     const sourceParam = source ? `&source=${source}` : '';
     // We add order_id and type to redirect_url so we know which order to complete.
     // ZiniPay also appends invoice_id to the webhook or redirect depending on their implementation.
@@ -17,8 +26,8 @@ export async function POST(req: Request) {
     const webhookUrl = `${host}/api/zinipay/webhook?order_id=${orderId}&type=${paymentType}`;
     
     const payload = {
-      cus_name: 'Customer',
-      cus_email: 'customer@wearixbd.com',
+      cus_name: cusName,
+      cus_email: cusEmail,
       amount: Number(amount),
       metadata: {
         order_id: orderId,
