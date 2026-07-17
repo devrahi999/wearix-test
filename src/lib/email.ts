@@ -19,7 +19,7 @@ export async function sendOrderReceiptEmail(order: Order) {
     },
   });
 
-  const logoUrl = 'https://res.cloudinary.com/iny5qswt/image/upload/v1784303109/logo.png';
+  const logoUrl = 'https://res.cloudinary.com/iny5qswt/image/upload/v1784305577/20260717_222439_uxmyty.png';
   const orderDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -59,7 +59,7 @@ export async function sendOrderReceiptEmail(order: Order) {
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .header { background-color: #111827; padding: 24px; text-align: center; }
-        .header img { height: 40px; }
+        .header img { height: 75px; max-width: 100%; object-fit: contain; }
         .content { padding: 32px; }
         h1 { color: #111827; font-size: 24px; margin-top: 0; margin-bottom: 8px; }
         p { color: #4b5563; font-size: 15px; line-height: 1.5; margin-top: 0; }
