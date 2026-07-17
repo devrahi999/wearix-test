@@ -126,12 +126,12 @@ export async function sendOrderReceiptEmail(order: Order) {
 
   try {
     await transporter.sendMail({
-      from: \`"WearixBD" <\${SMTP_USER}>\`,
+      from: `"WearixBD" <${SMTP_USER}>`,
       to: order.email,
-      subject: \`Order Receipt - \${order.id}\`,
+      subject: `Order Receipt - ${order.id}`,
       html,
     });
-    console.log(\`Order receipt email sent to \${order.email}\`);
+    console.log(`Order receipt email sent to ${order.email}`);
   } catch (error) {
     console.error('Failed to send order receipt email:', error);
   }
