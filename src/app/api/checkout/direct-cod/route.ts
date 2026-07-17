@@ -10,8 +10,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
     }
 
-    // Update paymentStatus to indicate COD is confirmed without advance
-    await adminDb.collection('orders').doc(orderId).update({ paymentStatus: 'delivery_charge_paid' });
+    const orderRef = adminDb.collection('orders').doc(orderId);
+    const orderDoc = await orderRef.get();
+    
+    if (!orderDoc.exists) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    if (orderDoc.data()?.telegramAlertSent) {
+      return NextResponse.json({ success: true });
+    }
+
+    // Update paymentStatus to indicate COD is confirmed without advance and mark alert as sent
+    await orderRef.update({ 
+      paymentStatus: 'delivery_charge_paid',
+      telegramAlertSent: true
+    });
     
     // Send Telegram alert
     await sendTelegramOrderAlert(orderId, 'cod');

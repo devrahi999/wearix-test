@@ -48,8 +48,22 @@ async function handleRequest(req: Request) {
       }
     }
 
+    const orderRef = adminDb.collection('orders').doc(orderId);
+    const orderDoc = await orderRef.get();
+    
+    if (!orderDoc.exists) {
+      return NextResponse.redirect(new URL('/shop', req.url), 303);
+    }
+
+    if (orderDoc.data()?.telegramAlertSent) {
+      return NextResponse.redirect(new URL(`/order-confirmation/${orderId}?source=${source}`, req.url), 303);
+    }
+
     const paymentStatus: PaymentStatus = type === 'cod' ? 'delivery_charge_paid' : 'paid';
-    await adminDb.collection('orders').doc(orderId).update({ paymentStatus });
+    await orderRef.update({ 
+      paymentStatus,
+      telegramAlertSent: true
+    });
     
     // Send Telegram alert
     await sendTelegramOrderAlert(orderId, type || 'online');

@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     // ZiniPay also appends invoice_id to the webhook or redirect depending on their implementation.
     const successUrl = `${host}/api/zinipay/callback/success?order_id=${orderId}&type=${paymentType}${sourceParam}`;
     const cancelUrl = `${host}/api/zinipay/callback/cancel?order_id=${orderId}${sourceParam}`;
+    const webhookUrl = `${host}/api/zinipay/webhook?order_id=${orderId}&type=${paymentType}`;
     
     const payload = {
       cus_name: 'Customer',
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
       },
       redirect_url: successUrl,
       cancel_url: cancelUrl,
-      webhook_url: successUrl // use success url as webhook if needed, or create a separate one. ZiniPay docs say it's optional.
+      webhook_url: webhookUrl
     };
 
     const response = await fetch('https://api.zinipay.com/v1/payment/create', {
