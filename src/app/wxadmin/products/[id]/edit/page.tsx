@@ -9,7 +9,7 @@ import { getProductById, updateProduct, getCategories } from '@/lib/db';
 import type { Category } from '@/types/product';
 import type { Product } from '@/types/product';
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+// Removed SIZES constant as we're using a text input
 
 export default function AdminEditProductPage() {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function AdminEditProductPage() {
   });
 
   const [stock, setStock] = useState<Record<string, number>>({});
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [sizesStr, setSizesStr] = useState<string>('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const handleCategoryToggle = (cat: string) => {
@@ -89,20 +89,14 @@ export default function AdminEditProductPage() {
           discountPercent: p.discountPrice && p.price ? Math.round(((p.price - p.discountPrice) / p.price) * 100).toString() : '',
         });
         setImages(p.images || []);
-        setSelectedSizes(p.sizes || []);
+        setSizesStr(p.sizes ? p.sizes.join(', ') : '');
         setSelectedCategories(p.categories || (p.category ? [p.category] : []));
       }
       setFetching(false);
     });
   }, [id]);
 
-  const handleSizeToggle = (size: string) => {
-    if (selectedSizes.includes(size)) {
-      setSelectedSizes(prev => prev.filter(s => s !== size));
-    } else {
-      setSelectedSizes(prev => [...prev, size]);
-    }
-  };
+
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -124,8 +118,9 @@ export default function AdminEditProductPage() {
     e.preventDefault();
     if (!product) return;
     setError('');
+    const selectedSizes = sizesStr.split(',').map(s => s.trim()).filter(Boolean);
     if (!images.length) { setError('Please upload at least one product image.'); return; }
-    if (!selectedSizes.length) { setError('Please select at least one size.'); return; }
+    if (!selectedSizes.length) { setError('Please enter at least one size.'); return; }
     if (!selectedCategories.length) { setError('Please select at least one category.'); return; }
     setSaving(true);
     try {
@@ -299,16 +294,15 @@ export default function AdminEditProductPage() {
         {/* Sizes */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
           <h2 className="font-bold text-gray-900 text-sm">Available Sizes *</h2>
-          <div className="flex flex-wrap gap-2">
-            {SIZES.map(s => (
-              <button type="button" key={s} onClick={() => handleSizeToggle(s)}
-                className={`w-10 h-10 rounded-xl text-sm font-bold border transition-colors ${
-                  selectedSizes.includes(s) ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-200 text-gray-500 hover:border-blue-300'
-                }`}>
-                {s}
-              </button>
-            ))}
-          </div>
+          <p className="text-xs text-gray-500 mb-2">Enter sizes separated by commas (e.g. S, M, L, XL or 28, 30, 32)</p>
+          <input
+            type="text"
+            required
+            value={sizesStr}
+            onChange={(e) => setSizesStr(e.target.value)}
+            placeholder="e.g. S, M, L, XL, XXL"
+            className="w-full h-11 px-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
         {/* Details & Visibility */}

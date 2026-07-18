@@ -19,9 +19,13 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    const fileName = formData.get('fileName') as string;
+    const slug = formData.get('slug') as string;
+    const publicId = slug || fileName ? (slug || fileName).split('.')[0] : undefined;
+
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: 'wearixbd' },
+        { folder: 'wearixbd', public_id: publicId },
         (error, result) => {
           if (error) reject(error);
           else resolve(result);

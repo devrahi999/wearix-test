@@ -15,6 +15,7 @@ import { SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/constants';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  alternates: { languages: { 'en-BD': 'https://wearixbd.store' } },
   title: {
     default: `${SITE_NAME} — ${SITE_TAGLINE}`,
     template: `%s | ${SITE_NAME}`,
@@ -66,6 +67,34 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} antialiased h-full`}>
+      <head>
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: SITE_NAME,
+                url: SITE_URL,
+                logo: `${SITE_URL}/logo.png`,
+              },
+              {
+                '@context': 'https://schema.org',
+                '@type': 'WebSite',
+                name: SITE_NAME,
+                url: SITE_URL,
+                potentialAction: {
+                  '@type': 'SearchAction',
+                  target: `${SITE_URL}/search?q={search_term_string}`,
+                  'query-input': 'required name=search_term_string',
+                },
+              }
+            ])
+          }}
+        />
+      </head>
       <body className={`${inter.variable} font-sans bg-gray-50 text-gray-900 selection:bg-blue-100`}>
         <AuthProvider>
           {children}

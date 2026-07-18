@@ -120,11 +120,28 @@ export default async function ProductPage({ params }: Props) {
   ).slice(0, 4);
   const reviews = await getReviewsByProduct(product.id);
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is the delivery time?',
+        acceptedAnswer: { '@type': 'Answer', text: 'We typically deliver within 2-3 days inside Dhaka and 3-5 days outside.' }
+      },
+      {
+        '@type': 'Question',
+        name: 'What is your return policy?',
+        acceptedAnswer: { '@type': 'Answer', text: 'We offer a 7-day return policy for unused items in original packaging.' }
+      }
+    ]
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([productJsonLd, breadcrumbJsonLd]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([productJsonLd, breadcrumbJsonLd, faqJsonLd]) }}
       />
       <ProductDetailClient 
         initialSlug={slug} 

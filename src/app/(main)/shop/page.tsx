@@ -13,15 +13,16 @@ export const metadata: Metadata = {
     canonical: url,
   },
   openGraph: {
-    title,
-    description,
-    url,
-    type: 'website',
+    title: 'Shop Premium Clothing | WearixBD',
+    description: 'Browse our collection of premium polo shirts, t-shirts, and more.',
+    url: `${SITE_URL}/shop`,
+    images: [{ url: '/logo.png' }]
   },
   twitter: {
     card: 'summary_large_image',
-    title,
-    description,
+    title: 'Shop Premium Clothing | WearixBD',
+    description: 'Browse our collection of premium polo shirts, t-shirts, and more.',
+    images: ['/logo.png']
   },
 };
 

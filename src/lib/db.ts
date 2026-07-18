@@ -5,6 +5,7 @@ import {
 } from 'firebase/firestore';
 import type { Product, Category } from '@/types/product';
 import type { Order } from '@/types/order';
+import type { Blog } from '@/types/blog';
 
 // ─── PRODUCTS ────────────────────────────────────────────────────────────────
 export async function getProducts(options?: { category?: string }) {
@@ -603,4 +604,33 @@ export async function resetProductRealSoldCount(productId?: string) {
     });
     await batch.commit();
   }
+}
+
+// ─── BLOGS ───────────────────────────────────────────────────────────────────
+export async function getBlogs() {
+  const q = query(collection(db, 'blogs'), orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Blog));
+}
+
+export async function getBlogBySlug(slug: string) {
+  const q = query(collection(db, 'blogs'), where('slug', '==', slug));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  const d = snapshot.docs[0];
+  return { id: d.id, ...d.data() } as Blog;
+}
+
+export async function createBlog(data: Omit<Blog, 'id'>) {
+  const ref = doc(collection(db, 'blogs'));
+  await setDoc(ref, data);
+  return { id: ref.id, ...data } as Blog;
+}
+
+export async function updateBlog(id: string, data: Partial<Blog>) {
+  await updateDoc(doc(db, 'blogs', id), data as any);
+}
+
+export async function deleteBlog(id: string) {
+  await deleteDoc(doc(db, 'blogs', id));
 }

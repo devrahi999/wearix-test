@@ -9,7 +9,7 @@ import { createProduct, getCategories } from '@/lib/db';
 import type { Category } from '@/types/product';
 import { useEffect } from 'react';
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+// Removed SIZES constant as we're using a text input
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -59,15 +59,7 @@ export default function NewProductPage() {
     }
   };
 
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-
-  const handleSizeToggle = (size: string) => {
-    if (selectedSizes.includes(size)) {
-      setSelectedSizes(prev => prev.filter(s => s !== size));
-    } else {
-      setSelectedSizes(prev => [...prev, size]);
-    }
-  };
+  const [sizesStr, setSizesStr] = useState<string>('M, L, XL');
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -88,8 +80,9 @@ export default function NewProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const selectedSizes = sizesStr.split(',').map(s => s.trim()).filter(Boolean);
     if (!images.length) { setError('Please upload at least one product image.'); return; }
-    if (!selectedSizes.length) { setError('Please select at least one size.'); return; }
+    if (!selectedSizes.length) { setError('Please enter at least one size.'); return; }
     if (!selectedCategories.length) { setError('Please select at least one category.'); return; }
     setSaving(true);
     try {
@@ -319,23 +312,16 @@ export default function NewProductPage() {
 
         {/* Sizes */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
-          <h2 className="font-bold text-gray-900">Available Sizes</h2>
-          <div className="flex flex-wrap gap-2">
-            {SIZES.map(size => (
-              <button
-                key={size}
-                type="button"
-                onClick={() => handleSizeToggle(size)}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
-                  selectedSizes.includes(size)
-                    ? 'border-blue-600 bg-blue-50 text-blue-600'
-                    : 'border-gray-200 text-gray-500 hover:border-blue-300'
-                }`}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
+          <h2 className="font-bold text-gray-900">Available Sizes *</h2>
+          <p className="text-xs text-gray-500 mb-2">Enter sizes separated by commas (e.g. S, M, L, XL or 28, 30, 32)</p>
+          <input
+            type="text"
+            required
+            value={sizesStr}
+            onChange={(e) => setSizesStr(e.target.value)}
+            placeholder="e.g. S, M, L, XL, XXL"
+            className="w-full h-11 px-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
         <button

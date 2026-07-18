@@ -158,17 +158,17 @@ function CheckoutForm() {
 
   const removeCoupon = () => setAppliedCoupon(null);
 
-  const couponDiscount = appliedCoupon 
+  const couponDiscount = Math.round(appliedCoupon 
     ? (appliedCoupon.discountType === 'percent' 
         ? cartSubtotal * (appliedCoupon.discountValue / 100)
         : appliedCoupon.discountValue)
-    : 0;
+    : 0);
 
   const totalItemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const buyMoreResult = calculateBuyMoreDiscount(cartSubtotal, totalItemsCount, promotions);
-  const totalDiscount = couponDiscount + buyMoreResult.discountAmount;
+  const totalDiscount = Math.round(couponDiscount + buyMoreResult.discountAmount);
   
-  const subtotalAfterDiscounts = cartSubtotal - totalDiscount;
+  const subtotalAfterDiscounts = Math.max(0, Math.round(cartSubtotal - totalDiscount));
   const freeDeliveryResult = calculateFreeDelivery(subtotalAfterDiscounts, promotions, hasFreeDelivery);
 
   const getShippingCharge = () => {
@@ -180,8 +180,8 @@ function CheckoutForm() {
     return settings.defaultDeliveryCharge;
   };
 
-  const shippingCharge = getShippingCharge();
-  const total = cartSubtotal - totalDiscount + shippingCharge;
+  const shippingCharge = Math.round(getShippingCharge());
+  const total = Math.max(0, Math.round(cartSubtotal - totalDiscount + shippingCharge));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
