@@ -69,9 +69,10 @@ async function handleWebhook(req: Request) {
 
     const paymentStatus: PaymentStatus = type === 'cod' ? 'delivery_charge_paid' : 'paid';
     
-    // 6. If completed, mark paid
+    // 6. If completed, mark paid and processing
     await orderRef.update({ 
       paymentStatus,
+      orderStatus: 'processing',
       telegramAlertSent: true,
       zinipayInvoiceId: invoiceId
     });

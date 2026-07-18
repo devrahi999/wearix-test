@@ -202,6 +202,11 @@ function CheckoutForm() {
     let genId = '';
     try {
       genId = 'WX-' + Math.floor(100000 + Math.random() * 900000);
+      
+      // Redirect to Payment Gateway
+      const paymentAmount = paymentMethod === 'cod' ? shippingCharge : total;
+      const isDirectCod = paymentMethod === 'cod' && (paymentAmount === 0 || (hasFullCodProduct && !hasNormalProduct));
+
       const newOrder = {
         id: genId,
         userId: user?.uid || 'guest',
@@ -233,7 +238,7 @@ function CheckoutForm() {
         discount: totalDiscount,
         total: total,
         paymentMethod: paymentMethod,
-        orderStatus: 'processing' as const,
+        orderStatus: isDirectCod ? 'processing' : 'pending',
         paymentStatus: 'unpaid' as const,
         couponCode: appliedCoupon?.code || null,
       };
@@ -246,11 +251,8 @@ function CheckoutForm() {
       if (appliedCoupon) {
         await recordCouponUsage(user?.uid || 'guest', appliedCoupon.id, appliedCoupon.code);
       }
-
-      // Redirect to Payment Gateway
-      const paymentAmount = paymentMethod === 'cod' ? shippingCharge : total;
       
-      if (paymentMethod === 'cod' && (paymentAmount === 0 || (hasFullCodProduct && !hasNormalProduct))) {
+      if (isDirectCod) {
         await fetch('/api/checkout/direct-cod', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

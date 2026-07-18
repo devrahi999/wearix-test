@@ -32,21 +32,24 @@ async function handleRequest(req: Request) {
   }
 
   try {
-    if (invoiceId) {
-      const verifyRes = await fetch('https://api.zinipay.com/v1/payment/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'zini-api-key': process.env.ZINIPAY_API_KEY || ''
-        },
-        body: JSON.stringify({ invoice_id: invoiceId })
-      });
-      const verifyData = await verifyRes.json();
-      
-      if (verifyData.status !== 'COMPLETED') {
-        console.error('ZiniPay verification failed:', verifyData);
-        return NextResponse.redirect(new URL(`/order-confirmation/${orderId}?error=payment_failed&source=${source}`, req.url), 303);
-      }
+    if (!invoiceId) {
+      // User returned without invoice (e.g. manual review pending)
+      return NextResponse.redirect(new URL(`/order-confirmation/${orderId}?status=pending&source=${source}`, req.url), 303);
+    }
+
+    const verifyRes = await fetch('https://api.zinipay.com/v1/payment/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'zini-api-key': process.env.ZINIPAY_API_KEY || ''
+      },
+      body: JSON.stringify({ invoice_id: invoiceId })
+    });
+    const verifyData = await verifyRes.json();
+    
+    if (verifyData.status !== 'COMPLETED') {
+      console.error('ZiniPay verification not completed:', verifyData);
+      return NextResponse.redirect(new URL(`/order-confirmation/${orderId}?status=pending&source=${source}`, req.url), 303);
     }
 
     const orderRef = adminDb.collection('orders').doc(orderId);
@@ -63,7 +66,9 @@ async function handleRequest(req: Request) {
     const paymentStatus: PaymentStatus = type === 'cod' ? 'delivery_charge_paid' : 'paid';
     await orderRef.update({ 
       paymentStatus,
-      telegramAlertSent: true
+      orderStatus: 'processing',
+      telegramAlertSent: true,
+      zinipayInvoiceId: invoiceId
     });
     
     // Send Telegram alert
