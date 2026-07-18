@@ -11,7 +11,12 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogListPage() {
-  const posts = await getBlogs();
+  let posts: any[] = [];
+  try {
+    posts = await getBlogs();
+  } catch (error) {
+    console.warn('Failed to fetch blogs, likely due to missing permissions:', error);
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

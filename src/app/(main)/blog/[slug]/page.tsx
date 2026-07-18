@@ -12,7 +12,12 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const post = await getBlogBySlug(params.slug);
+  let post = null;
+  try {
+    post = await getBlogBySlug(params.slug);
+  } catch (err) {
+    console.warn('Failed to fetch blog for metadata:', err);
+  }
   if (!post) return { title: 'Not Found' };
   return {
     title: `${post.title} | ${SITE_NAME}`,
@@ -26,7 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BlogPostPage({ params }: Props) {
-  const post = await getBlogBySlug(params.slug);
+  let post = null;
+  try {
+    post = await getBlogBySlug(params.slug);
+  } catch (err) {
+    console.warn('Failed to fetch blog post:', err);
+  }
   if (!post) notFound();
 
   const contentLines = post.content.split('\n').filter(Boolean);
