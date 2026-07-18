@@ -34,7 +34,7 @@ async function handleRequest(req: Request) {
   try {
     if (!invoiceId) {
       // User returned without invoice (e.g. manual review pending)
-      return NextResponse.redirect(new URL(`/order-confirmation/${orderId}?status=pending&source=${source}`, req.url), 303);
+      return NextResponse.redirect(new URL(`/?toast=payment_pending`, req.url), 303);
     }
 
     const verifyRes = await fetch('https://api.zinipay.com/v1/payment/verify', {
@@ -49,7 +49,7 @@ async function handleRequest(req: Request) {
     
     if (verifyData.status !== 'COMPLETED') {
       console.error('ZiniPay verification not completed:', verifyData);
-      return NextResponse.redirect(new URL(`/order-confirmation/${orderId}?status=pending&source=${source}`, req.url), 303);
+      return NextResponse.redirect(new URL(`/?toast=payment_pending`, req.url), 303);
     }
 
     const orderRef = adminDb.collection('orders').doc(orderId);

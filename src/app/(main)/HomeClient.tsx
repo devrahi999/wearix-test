@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import HeroSlider from '@/components/home/HeroSlider';
 import CategoryShortcuts from '@/components/home/CategoryShortcuts';
+import { toast } from 'react-hot-toast';
 
 import ProductGrid from '@/components/product/ProductGrid';
 import { ArrowRight, TrendingUp, Zap, Star } from 'lucide-react';
@@ -58,6 +59,19 @@ export default function HomeClient({
   useEffect(() => {
     if (initialProducts.length > 0) {
       setRandomProducts([...initialProducts].sort(() => 0.5 - Math.random()).slice(0, 8));
+    }
+    
+    // Check for payment status toasts from ZiniPay redirects
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const toastParam = urlParams.get('toast');
+      if (toastParam === 'payment_pending') {
+        toast.success('Your payment is pending review. An admin will verify it soon.', { duration: 5000, icon: '⏳' });
+        window.history.replaceState({}, '', '/');
+      } else if (toastParam === 'payment_cancelled') {
+        toast.error('Payment was cancelled.');
+        window.history.replaceState({}, '', '/');
+      }
     }
 
     const unsubProducts = listenToProducts(data => {

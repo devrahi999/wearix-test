@@ -19,8 +19,6 @@ export default function OrderConfirmationPage() {
   const orderId = (params.orderId as string) || 'UNKNOWN_ORDER';
   
   const source = searchParams.get('source');
-  const error = searchParams.get('error');
-  const status = searchParams.get('status');
 
   const { clearCart, clearBuyNowItem } = useCartStore();
 
@@ -66,47 +64,19 @@ export default function OrderConfirmationPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       {/* Header card */}
       <div className="bg-white border border-gray-100 rounded-2xl p-6 md:p-8 shadow-sm text-center space-y-4 mb-8">
-        {error === 'payment_failed' ? (
-          <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-        ) : status === 'pending' ? (
-          <div className="w-16 h-16 bg-yellow-50 text-yellow-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-        ) : (
-          <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-        )}
+        <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto">
+          <CheckCircle2 className="w-10 h-10" />
+        </div>
         <div>
-          {error === 'payment_failed' ? (
-            <span className="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
-              Payment Failed
-            </span>
-          ) : status === 'pending' ? (
-            <span className="text-xs font-bold text-yellow-600 bg-yellow-50 px-2.5 py-1 rounded-full">
-              Payment Pending Review
-            </span>
-          ) : (
-            <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
-              Order Placed Successfully
-            </span>
-          )}
+          <span className="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
+            Order Placed Successfully
+          </span>
           
           <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mt-3">
-            {error === 'payment_failed' 
-              ? 'There was an issue with your payment.'
-              : status === 'pending' 
-                ? 'Your order is pending verification.'
-                : 'Thank you for your order!'}
+            Thank you for your order!
           </h1>
           <p className="text-gray-500 text-sm mt-2 max-w-md mx-auto">
-            {error === 'payment_failed' 
-              ? 'Your payment could not be processed. Our team will contact you shortly to help you complete the order via COD or alternative methods.'
-              : status === 'pending'
-                ? 'You submitted a manual payment review. Our team will verify it shortly. You will be notified once it is approved.'
-                : 'Your order has been logged in our system. We will call you shortly on your phone number to verify and confirm your delivery.'}
+            Your order has been logged in our system. We will call you shortly on your phone number to verify and confirm your delivery.
           </p>
         </div>
 
@@ -132,7 +102,7 @@ export default function OrderConfirmationPage() {
                 <div className="mt-0.5 flex items-center">
                   {order.paymentStatus === 'paid' || order.paymentStatus === 'delivery_charge_paid' ? (
                     <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded">Paid</span>
-                  ) : order.orderStatus === 'pending' || status === 'pending' ? (
+                  ) : order.orderStatus === 'pending' ? (
                     <span className="text-xs font-bold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded">Pending Verification</span>
                   ) : (
                     <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded">Not Paid</span>
