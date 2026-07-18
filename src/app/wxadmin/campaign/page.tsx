@@ -36,6 +36,10 @@ export default function CampaignManagementPage() {
       setCampaigns(camps);
       setCategories(cats);
       setLoading(false);
+    }).catch(err => {
+      console.error(err);
+      toast.error('Failed to load campaigns. Check permissions.');
+      setLoading(false);
     });
   }, []);
 
