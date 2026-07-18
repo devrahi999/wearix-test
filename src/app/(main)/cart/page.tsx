@@ -204,7 +204,7 @@ function CartPageContent() {
               )}
               {buyMoreResult.qualified && (
                 <div className="flex justify-between text-red-600 font-medium">
-                  <span>Extra Discount ({promotions?.buyMoreDiscountPct}%)</span>
+                  <span>Extra Discount ({campaigns.find(c => c.type === 'buy_more' && c.isActive)?.discountPct || 0}%)</span>
                   <span>-{formatPrice(buyMoreResult.discountAmount)}</span>
                 </div>
               )}
