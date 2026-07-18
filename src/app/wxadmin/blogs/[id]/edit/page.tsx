@@ -15,17 +15,22 @@ export default function EditBlogPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     async function loadData() {
-      const blogs = await getBlogs();
-      const blog = blogs.find(b => b.id === params.id);
-      if (blog) {
-        setFormData({
-          title: blog.title,
-          slug: blog.slug,
-          excerpt: blog.excerpt,
-          content: blog.content,
-          image: blog.image,
-          readTime: blog.readTime
-        });
+      try {
+        const decodedId = decodeURIComponent(params.id);
+        const blogs = await getBlogs();
+        const blog = blogs.find(b => b.id === decodedId);
+        if (blog) {
+          setFormData({
+            title: blog.title || '',
+            slug: blog.slug || '',
+            excerpt: blog.excerpt || '',
+            content: blog.content || '',
+            image: blog.image || '',
+            readTime: blog.readTime || ''
+          });
+        }
+      } catch (err) {
+        console.error(err);
       }
       setFetching(false);
     }
@@ -35,8 +40,15 @@ export default function EditBlogPage({ params }: { params: { id: string } }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await updateBlog(params.id, formData);
-    router.push('/wxadmin/blogs');
+    try {
+      const decodedId = decodeURIComponent(params.id);
+      await updateBlog(decodedId, formData);
+      router.push('/wxadmin/blogs');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save blog');
+      setLoading(false);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
