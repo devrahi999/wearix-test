@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `${product.name} - Buy Online in Bangladesh | ${SITE_NAME}`;
-  const description = product.description.substring(0, 160) + (product.description.length > 160 ? '...' : '');
+  const title = `${product.name} | WearixBD`;
+  const description = `Buy ${product.name} in Bangladesh. Comfortable fabric, perfect fit, Cash on Delivery available.`;
   const image = product.images[0] || '/logo.png';
   const url = `${SITE_URL}/product/${product.slug}`;
 

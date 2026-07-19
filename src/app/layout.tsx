@@ -15,12 +15,16 @@ import { SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/constants';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  alternates: { languages: { 'en-BD': 'https://wearixbd.store' } },
-  title: {
-    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
-    template: `%s | ${SITE_NAME}`,
+  alternates: { 
+    canonical: '/',
+    languages: { 'en-BD': 'https://wearixbd.store' } 
   },
-  description: 'WearixBD is an online fashion store in Bangladesh offering premium-quality men\'s apparel, including polo shirts, t-shirts, shirts, tank tops, and more.',
+  title: {
+    default: `WearixBD - Premium Fashion Store in Bangladesh`,
+    template: `%s | WearixBD`,
+  },
+  description: 'Shop premium polo shirts, t-shirts, trousers, shirts and more at WearixBD. Cash on Delivery, Nationwide Delivery across Bangladesh.',
+  keywords: ['wearixbd', 'wearix', 'polo shirt bangladesh', "men's fashion bd", 'online clothing store bangladesh', 'premium t shirt bd'],
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
@@ -30,8 +34,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
-    description: 'WearixBD is an online fashion store in Bangladesh offering premium-quality men\'s apparel, including polo shirts, t-shirts, shirts, tank tops, and more.',
+    title: `WearixBD - Premium Fashion Store in Bangladesh`,
+    description: 'Shop premium polo shirts, t-shirts, trousers, shirts and more at WearixBD. Cash on Delivery, Nationwide Delivery across Bangladesh.',
     images: [
       {
         url: '/logo.png', // Using logo.png as requested
@@ -43,8 +47,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
-    description: 'WearixBD is an online fashion store in Bangladesh offering premium-quality men\'s apparel, including polo shirts, t-shirts, shirts, tank tops, and more.',
+    title: `WearixBD - Premium Fashion Store in Bangladesh`,
+    description: 'Shop premium polo shirts, t-shirts, trousers, shirts and more at WearixBD. Cash on Delivery, Nationwide Delivery across Bangladesh.',
     images: ['/logo.png'],
   },
   robots: {

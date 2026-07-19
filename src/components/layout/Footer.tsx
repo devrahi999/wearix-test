@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Phone, Mail } from 'lucide-react';
+import { Phone, Mail, MapPin } from 'lucide-react';
 import { SITE_NAME } from '@/constants';
 import { getStoreSettings, type StoreSettings } from '@/lib/db';
 
@@ -88,6 +88,10 @@ export default function Footer() {
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="w-4 h-4 text-blue-400 shrink-0" />
                 <a href={`mailto:${settings?.email || 'help.wearix@gmail.com'}`} className="hover:text-white transition-colors">{settings?.email || 'help.wearix@gmail.com'}</a>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
+                <span>Dhaka, Bangladesh</span>
               </div>
             </div>
           </div>

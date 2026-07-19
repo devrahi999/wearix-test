@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const categoryInfo = categories.find(c => c.slug.toLowerCase() === category.toLowerCase());
   
   const titleName = categoryInfo ? categoryInfo.name : category.charAt(0).toUpperCase() + category.slice(1);
-  const title = `${titleName} | Buy Online at ${SITE_NAME}`;
-  const description = categoryInfo?.description || `Explore our latest collection of ${titleName.toLowerCase()} at ${SITE_NAME}. Best quality and fast delivery in Bangladesh.`;
+  const title = `${titleName} | WearixBD`;
+  const description = `Premium ${titleName} in Bangladesh. Stylish, comfortable and affordable ${titleName} with Cash on Delivery.`;
   const url = `${SITE_URL}/shop/${category}`;
   const image = categoryInfo?.image || '/logo.png';
 
