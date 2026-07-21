@@ -211,7 +211,7 @@ export async function getAllUsers() {
 export async function getUser(uid: string) {
   const docSnap = await getDoc(doc(db, 'users', uid));
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as User;
+    return { id: docSnap.id, ...docSnap.data() } as unknown as User;
   }
   return null;
 }
@@ -789,7 +789,7 @@ export async function markVoucherAsUsed(voucherId: string, orderId: string) {
 export async function getReferralSettings(): Promise<ReferralSettings> {
   const snap = await getDoc(doc(db, 'config', 'referral'));
   if (!snap.exists()) {
-    return { isActive: true, isReferredDiscountEnabled: true, defaultReferralDiscountPct: 10, defaultRewardPoints: 50 };
+    return { isActive: true, isReferredDiscountEnabled: true, defaultReferralDiscountPct: 10, referrerRewardPoints: 50 } as unknown as ReferralSettings;
   }
   return snap.data() as ReferralSettings;
 }
