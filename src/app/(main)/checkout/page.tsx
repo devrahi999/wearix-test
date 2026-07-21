@@ -218,6 +218,7 @@ function CheckoutForm() {
   };
 
   const removeVoucher = () => setAppliedVoucher(null);
+  const removeCoupon = () => { setAppliedCoupon(null); setCouponCode(''); };
 
   const couponDiscount = Math.round(appliedCoupon 
     ? (appliedCoupon.discountType === 'percent' 
