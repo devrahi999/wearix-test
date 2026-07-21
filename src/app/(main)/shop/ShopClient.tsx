@@ -291,7 +291,7 @@ export default function ShopClient({ initialProducts = [], initialCategories = [
               <span className="text-4xl">🔍</span>
               <h3 className="text-lg font-bold text-gray-900 mt-4">No Products Found</h3>
               <p className="text-sm text-gray-500 mt-2">
-                We couldn&apos;t find any items matching your filter criteria. Try clearing them to see all catalog items.
+                We couldn't find any items matching your filter criteria. Try clearing them to see all catalog items.
               </p>
               <button
                 onClick={clearFilters}

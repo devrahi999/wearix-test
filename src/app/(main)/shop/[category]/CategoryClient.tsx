@@ -203,7 +203,7 @@ export default function CategoryClient({ categorySlug, initialProducts = [], ini
               <span className="text-4xl">🛍️</span>
               <h3 className="text-lg font-bold text-gray-900 mt-4">No Products in Category</h3>
               <p className="text-sm text-gray-500 mt-2">
-                We couldn&apos;t find any items in this category matching your filters. Try exploring other collections.
+                We couldn't find any items in this category matching your filters. Try exploring other collections.
               </p>
               <Link
                 href="/shop"

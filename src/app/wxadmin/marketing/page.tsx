@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getMarketingSettings, updateMarketingSettings, MarketingSettings } from '@/lib/db';
 import { Loader2, CheckCircle2, Upload, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function MarketingPage() {
   const [settings, setSettings] = useState<MarketingSettings>({
@@ -59,14 +60,13 @@ export default function MarketingPage() {
         setSettings(prev => ({ ...prev, popupImage: data.url }));
         // Auto-save when image is uploaded
         await updateMarketingSettings({ ...settings, popupImage: data.url });
-        setMessage('Image uploaded and saved!');
-        setTimeout(() => setMessage(''), 3000);
+        toast.success('Image uploaded and saved!');
       } else {
-        alert(data.error || 'Failed to upload image. Please try again.');
+        toast.error(data.error || 'Failed to upload image. Please try again.');
       }
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Failed to upload image. Network error.');
+      toast.error('Failed to upload image. Network error.');
     } finally {
       setUploading(false);
       if (e.target) e.target.value = '';

@@ -4,14 +4,16 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, Heart, Settings, LogOut, User as UserIcon, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Heart, Settings, LogOut, User as UserIcon, ChevronRight, Gift } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getUserOrders } from '@/lib/db';
 import type { Order } from '@/types/order';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 export default function AccountDashboard() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const { confirm } = useConfirm();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -37,6 +39,7 @@ export default function AccountDashboard() {
   const menuItems = [
     { label: 'My Orders', href: '/account/orders', icon: ShoppingBag, desc: 'Check your order status' },
     { label: 'Saved Wishlist', href: '/wishlist', icon: Heart, desc: 'Items you loved' },
+    { label: 'Referrals & Rewards', href: '/account/referrals', icon: Gift, desc: 'Earn points & coupons' },
     { label: 'Account Settings', href: '/account/settings', icon: Settings, desc: 'Profile and security' },
   ];
 
@@ -92,7 +95,18 @@ export default function AccountDashboard() {
 
       {/* Sign Out Button */}
       <button
-        onClick={async () => { await logout(); router.push('/login'); }}
+        onClick={async () => {
+          const ok = await confirm({
+            title: 'Sign Out',
+            message: 'Are you sure you want to sign out of your account?',
+            confirmText: 'Sign Out',
+            cancelText: 'Cancel'
+          });
+          if (ok) {
+            await logout();
+            router.push('/login');
+          }
+        }}
         className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-red-600 font-bold bg-white/80 backdrop-blur-xl border border-red-100 shadow-sm hover:bg-red-50 transition-colors"
       >
         <LogOut className="w-5 h-5" />

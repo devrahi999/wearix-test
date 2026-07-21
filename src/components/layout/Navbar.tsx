@@ -50,7 +50,6 @@ export default function Navbar() {
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/shop', hasDropdown: true },
-    { label: 'Blog', href: '/blog' },
     { label: 'About', href: '/about' },
     { label: 'Contact', href: '/contact' },
   ];
@@ -146,73 +145,71 @@ export default function Navbar() {
       </div>
     </header>
     {/* Sidebar Mobile/Desktop Menu */}
-    {mobileOpen && (
-      <div className="fixed inset-0 z-[60] flex">
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-        <div className="relative h-full w-72 bg-white shadow-2xl flex flex-col animate-in slide-in-from-left">
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            <Image src="/logo.png" alt={SITE_NAME} width={120} height={36} className="object-contain h-8 w-auto" />
-            <button onClick={() => setMobileOpen(false)} className="p-2 rounded-full hover:bg-gray-100">
-              <X className="w-5 h-5" />
-            </button>
+    <div className={`fixed inset-0 z-[60] flex transition-opacity duration-300 ${mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+      <div className={`relative h-full w-72 bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <Image src="/logo.png" alt={SITE_NAME} width={120} height={36} className="object-contain h-8 w-auto" />
+          <button onClick={() => setMobileOpen(false)} className="p-2 rounded-full hover:bg-gray-100">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Menu</h3>
+            <div className="space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    pathname === link.href
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Menu</h3>
-              <div className="space-y-1">
-                {navLinks.map((link) => (
+
+          <div>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">All Categories</h3>
+            <div className="space-y-1">
+              {categories.map((cat) => {
+                const isActive = pathname === `/shop/${cat.slug}`;
+                return (
                   <Link
-                    key={link.label}
-                    href={link.href}
-                    className={`block px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                      pathname === link.href
-                        ? 'text-blue-600 bg-blue-50'
+                    key={cat.id}
+                    href={`/shop/${cat.slug}`}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? 'text-blue-600 bg-blue-50 shadow-sm'
                         : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                     }`}
                   >
-                    {link.label}
+                    <div className={`relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border-2 ${
+                      isActive ? 'border-blue-300' : 'border-gray-100 group-hover:border-blue-200'
+                    }`}>
+                      {cat.image && <Image src={cat.image} alt={cat.name} fill sizes="40px" className="object-cover" />}
+                    </div>
+                    <span className={isActive ? 'font-bold' : ''}>{cat.name}</span>
                   </Link>
-                ))}
-              </div>
+                );
+              })}
             </div>
-
-            <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">All Categories</h3>
-              <div className="space-y-1">
-                {categories.map((cat) => {
-                  const isActive = pathname === `/shop/${cat.slug}`;
-                  return (
-                    <Link
-                      key={cat.id}
-                      href={`/shop/${cat.slug}`}
-                      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        isActive
-                          ? 'text-blue-600 bg-blue-50 shadow-sm'
-                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className={`relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border-2 ${
-                        isActive ? 'border-blue-300' : 'border-gray-100 group-hover:border-blue-200'
-                      }`}>
-                        {cat.image && <Image src={cat.image} alt={cat.name} fill sizes="40px" className="object-cover" />}
-                      </div>
-                      <span className={isActive ? 'font-bold' : ''}>{cat.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-              <Link
-                href="/categories"
-                className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-blue-200 text-blue-600 text-sm font-semibold hover:bg-blue-50 transition-colors"
-              >
-                View All Categories →
-              </Link>
-            </div>
+            <Link
+              href="/categories"
+              className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-blue-200 text-blue-600 text-sm font-semibold hover:bg-blue-50 transition-colors"
+            >
+              View All Categories →
+            </Link>
           </div>
         </div>
       </div>
-    )}
-    </>
+    </div>
+  </>
   );
 }

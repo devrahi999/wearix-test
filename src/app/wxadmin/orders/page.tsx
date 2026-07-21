@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ClipboardList, Loader2, Search, Trash2 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
-import { listenToAllOrders, deleteOrder } from '@/lib/db';
+import { listenToAllOrders, deleteOrder, updateOrderStatus } from '@/lib/db';
 import toast from 'react-hot-toast';
 import type { Order } from '@/types/order';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
@@ -100,6 +100,17 @@ export default function AdminOrdersPage() {
     } catch (err) {
       console.error(err);
       toast.error('Failed to delete some orders');
+    }
+  };
+
+  const handleStatusChange = async (orderId: string, newStatus: Order['orderStatus'], e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.stopPropagation();
+    try {
+      const message = `Order status updated to ${newStatus}.`;
+      await updateOrderStatus(orderId, newStatus, message);
+      toast.success(`Order #${orderId.slice(-6)} status updated to ${newStatus}`);
+    } catch (err: any) {
+      toast.error('Failed to update status');
     }
   };
 
@@ -199,14 +210,26 @@ export default function AdminOrdersPage() {
                   <td className="py-3.5">{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td className="py-3.5 uppercase">{order.paymentMethod}</td>
                   <td className="py-3.5 font-semibold text-blue-600">{formatPrice(order.total || 0)}</td>
-                  <td className="py-3.5 text-center">
-                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
-                      order.orderStatus === 'delivered' ? 'bg-green-50 text-green-700'
-                      : order.orderStatus === 'cancelled' ? 'bg-red-50 text-red-700'
-                      : 'bg-blue-50 text-blue-700'
-                    }`}>
-                      {order.orderStatus}
-                    </span>
+                  <td className="py-3.5 text-center" onClick={e => e.stopPropagation()}>
+                    <select
+                      value={order.orderStatus}
+                      onChange={(e) => handleStatusChange(order.id, e.target.value as Order['orderStatus'], e)}
+                      className={`text-[11px] font-bold px-2 py-1 rounded-lg outline-none cursor-pointer border-0 ${
+                        order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800'
+                        : order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-800'
+                        : order.orderStatus === 'shipped' ? 'bg-indigo-100 text-indigo-800'
+                        : order.orderStatus === 'processing' ? 'bg-blue-100 text-blue-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                      }`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="placed">Placed</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
                   </td>
                   <td className="py-3.5 text-right">
                     <button 

@@ -4,10 +4,10 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Loader2, Gift } from 'lucide-react';
 import { loginWithEmail, loginWithGoogle, registerWithEmail, forgotPassword } from '@/lib/authHelpers';
 
-type Mode = 'login' | 'register' | 'forgot';
+type Mode = 'login' | 'forgot';
 
 function AuthForm() {
   const router = useRouter();
@@ -15,7 +15,6 @@ function AuthForm() {
   const redirectTo = searchParams.get('redirect') || '/account';
 
   const [mode, setMode] = useState<Mode>('login');
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -32,10 +31,6 @@ function AuthForm() {
     try {
       if (mode === 'login') {
         await loginWithEmail(email, password);
-        router.push(redirectTo);
-      } else if (mode === 'register') {
-        if (!name.trim()) { setError('Please enter your full name.'); setLoading(false); return; }
-        await registerWithEmail(name.trim(), email, password);
         router.push(redirectTo);
       } else if (mode === 'forgot') {
         await forgotPassword(email);
@@ -89,14 +84,10 @@ function AuthForm() {
         <div className="bg-white rounded-3xl shadow-xl shadow-blue-100/50 border border-gray-100 p-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-extrabold text-gray-900">
-              {mode === 'login' && 'Welcome Back'}
-              {mode === 'register' && 'Create Account'}
-              {mode === 'forgot' && 'Reset Password'}
+              {mode === 'login' ? 'Welcome Back' : 'Reset Password'}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
-              {mode === 'login' && 'Sign in to your WearixBD account'}
-              {mode === 'register' && 'Join WearixBD and start shopping'}
-              {mode === 'forgot' && "We'll send you a reset link"}
+              {mode === 'login' ? 'Sign in to your WearixBD account' : "We'll send you a reset link"}
             </p>
           </div>
 
@@ -137,19 +128,6 @@ function AuthForm() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === 'register' && (
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  required
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            )}
 
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -210,20 +188,12 @@ function AuthForm() {
 
           <div className="text-center mt-5 text-sm text-gray-500">
             {mode === 'login' && (
-              <>
-                Don&apos;t have an account?{' '}
-                <button onClick={() => { setMode('register'); clearMessages(); }} className="text-blue-600 font-semibold hover:underline">
-                  Sign Up
-                </button>
-              </>
-            )}
-            {mode === 'register' && (
-              <>
-                Already have an account?{' '}
-                <button onClick={() => { setMode('login'); clearMessages(); }} className="text-blue-600 font-semibold hover:underline">
-                  Sign In
-                </button>
-              </>
+              <p>
+                Don't have an account?{' '}
+                <Link href="/signup" className="text-blue-600 font-bold hover:underline">
+                  Sign up
+                </Link>
+              </p>
             )}
             {mode === 'forgot' && (
               <button onClick={() => { setMode('login'); clearMessages(); }} className="text-blue-600 font-semibold hover:underline">

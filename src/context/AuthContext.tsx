@@ -6,7 +6,7 @@ import {
   User as FirebaseUser,
   signOut,
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 interface AppUser {
@@ -16,6 +16,12 @@ interface AppUser {
   photoURL: string | null;
   phone?: string;
   isAdmin: boolean;
+  referralCode?: string;
+  rewardPoints?: number;
+  referredBy?: string;
+  firstOrderUsed?: boolean;
+  referCodeDiscountType?: string;
+  referCodeDiscountValue?: number;
 }
 
 interface AuthContextType {
@@ -42,6 +48,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
         const data = userSnap.data();
+        let referralCode = data.referralCode;
+        if (!referralCode) {
+          referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+          await setDoc(userRef, { referralCode }, { merge: true });
+        }
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
@@ -49,14 +60,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoURL: data.photoURL || firebaseUser.photoURL,
           phone: data.phone || '',
           isAdmin: data.isAdmin || false,
+          referralCode: referralCode,
+          rewardPoints: data.rewardPoints || 0,
+          referredBy: data.referredBy || '',
+          // If firstOrderUsed is explicitly stored, use it.
+          // If not stored: if user was referred (has referredBy), default false (they haven't used it yet).
+          // Otherwise default true (no discount available).
+          firstOrderUsed: data.firstOrderUsed !== undefined
+            ? data.firstOrderUsed
+            : (data.referredBy ? false : true),
+          referCodeDiscountType: data.referCodeDiscountType || '',
+          referCodeDiscountValue: data.referCodeDiscountValue || 0,
         });
+
       } else {
+        // Document will be created by authHelpers.ts during signup
+        const referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
           isAdmin: false,
+          referralCode: referralCode,
+          rewardPoints: 0,
+          referredBy: '',
+          firstOrderUsed: true,
+          referCodeDiscountType: '',
+          referCodeDiscountValue: 0,
         });
       }
     } catch {

@@ -44,7 +44,7 @@ export default function AccountOrdersPage() {
 
       {orders.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-          <p className="text-gray-500 text-sm">You haven&apos;t placed any orders yet.</p>
+          <p className="text-gray-500 text-sm">You haven't placed any orders yet.</p>
           <Link href="/shop" className="mt-4 inline-block text-sm font-bold text-blue-600 hover:underline">
             Start Shopping →
           </Link>

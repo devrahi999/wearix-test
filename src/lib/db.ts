@@ -155,7 +155,7 @@ export async function createOrder(data: Partial<Order> & Omit<Order, 'id' | 'cre
   };
   await setDoc(newRef, orderData);
 
-  // Increment soldCount for products
+  // Increment soldCount for products if allowed by security rules
   if (data.items && data.items.length > 0) {
     for (const item of data.items) {
       if (item.productId) {
@@ -165,8 +165,8 @@ export async function createOrder(data: Partial<Order> & Omit<Order, 'id' | 'cre
             soldCount: increment(item.quantity),
             realSoldCount: increment(item.quantity)
           });
-        } catch (err) {
-          console.error("Failed to increment soldCount for product", item.productId, err);
+        } catch {
+          // Ignore permission-denied error on client-side product updates
         }
       }
     }
@@ -190,6 +190,15 @@ export async function updateOrderStatus(id: string, status: Order['orderStatus']
     
     tx.update(orderRef, updateData);
   });
+  
+  // Trigger referral rewards if applicable
+  if (status === 'delivered' || status === 'cancelled' || status === 'returned') {
+    try {
+      await processReferralReward(id, status);
+    } catch (err) {
+      console.error('Failed to process referral reward:', err);
+    }
+  }
 }
 
 
@@ -197,6 +206,14 @@ export async function updateOrderStatus(id: string, status: Order['orderStatus']
 export async function getAllUsers() {
   const snapshot = await getDocs(collection(db, 'users'));
   return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function getUser(uid: string) {
+  const docSnap = await getDoc(doc(db, 'users', uid));
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...docSnap.data() } as User;
+  }
+  return null;
 }
 
 export async function updateUser(id: string, data: Record<string, any>) {
@@ -446,6 +463,31 @@ export async function updateMarketingSettings(data: MarketingSettings) {
 // ─── CAMPAIGNS ───────────────────────────────────────────────────────────────
 export type CampaignType = 'buy_more' | 'free_delivery';
 
+export interface User {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+  phone?: string;
+  isAdmin: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  address?: {
+    district: string;
+    area: string;
+    addressLine: string;
+  };
+  referralCode?: string;
+  referredBy?: string;
+  firstOrderUsed?: boolean;
+  rewardPoints?: number;
+  isReferredDiscountEnabled?: boolean;
+  referCodeDiscountType?: 'percent' | 'fixed' | 'free_delivery';
+  referCodeDiscountValue?: number;
+  totalEarnedPoints?: number;
+  totalReferrals?: number;
+}
+
 export interface Campaign {
   id: string;
   type: CampaignType;
@@ -597,3 +639,331 @@ export async function resetProductRealSoldCount(productId?: string) {
   }
 }
 
+// ─── REFERRALS & REWARDS ─────────────────────────────────────────────────────
+
+export interface ReferralSettings {
+  isActive: boolean;
+  referrerRewardPoints: number;
+  referredDiscountPct: number; // legacy
+  defaultReferralDiscountPct: number; // legacy
+  discountType?: 'percent' | 'fixed' | 'free_delivery';
+  discountValue?: number;
+  minOrderAmount: number;
+  isReferredDiscountEnabled?: boolean;
+}
+
+export interface Referral {
+  id: string;
+  referrerId: string;
+  referredUserId: string;
+  referredUserEmail: string;
+  status: 'pending' | 'rewarded' | 'cancelled' | 'rejected';
+  orderId: string;
+  earnedPoints: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RewardRequest {
+  id: string;
+  userId: string;
+  userEmail: string;
+  pointsToRedeem: number;
+  status: 'pending' | 'approved' | 'rejected';
+  rewardOptionId?: string;
+  rewardOptionTitle?: string;
+  voucherId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RewardOption {
+  id: string;
+  title: string;
+  description: string;
+  pointsCost: number;
+  discountType: 'percent' | 'fixed' | 'free_delivery';
+  discountValue: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export async function getRewardOptions() {
+  const q = query(collection(db, 'reward_options'), orderBy('pointsCost', 'asc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as RewardOption));
+}
+
+export async function createRewardOption(data: Omit<RewardOption, 'id' | 'createdAt'>) {
+  const ref = doc(collection(db, 'reward_options'));
+  const docData = { ...data, createdAt: new Date().toISOString() };
+  await setDoc(ref, docData);
+  return { id: ref.id, ...docData } as RewardOption;
+}
+
+export async function updateRewardOption(id: string, data: Partial<RewardOption>) {
+  await updateDoc(doc(db, 'reward_options', id), data);
+}
+
+export async function deleteRewardOption(id: string) {
+  await deleteDoc(doc(db, 'reward_options', id));
+}
+
+export interface UserVoucher {
+  id: string;
+  userId: string;
+  title: string;
+  discountType: 'percent' | 'fixed' | 'free_delivery';
+  discountValue: number;
+  validCategories?: string[];
+  validProducts?: string[];
+  minOrderAmount?: number;
+  isUsed: boolean;
+  createdAt: string;
+  usedAt?: string;
+  orderId?: string;
+}
+
+export async function getUserVouchers(userId: string) {
+  const q = query(collection(db, 'user_vouchers'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as UserVoucher));
+}
+
+export async function createUserVoucher(data: Omit<UserVoucher, 'id' | 'createdAt' | 'isUsed'>) {
+  const ref = doc(collection(db, 'user_vouchers'));
+  const docData = { ...data, isUsed: false, createdAt: new Date().toISOString() };
+  await setDoc(ref, docData);
+  return { id: ref.id, ...docData } as UserVoucher;
+}
+
+export async function processRewardApproval(
+  requestId: string, 
+  userId: string, 
+  pointsCost: number,
+  voucherData: Omit<UserVoucher, 'id' | 'createdAt' | 'isUsed' | 'userId'>
+) {
+  await runTransaction(db, async (tx) => {
+    const userRef = doc(db, 'users', userId);
+    const reqRef = doc(db, 'reward_requests', requestId);
+    
+    const userSnap = await tx.get(userRef);
+    if (!userSnap.exists()) throw new Error('User not found');
+    const userData = userSnap.data();
+    
+    if ((userData.rewardPoints || 0) < pointsCost) {
+      throw new Error('User does not have enough points');
+    }
+    
+    // Create voucher
+    const voucherRef = doc(collection(db, 'user_vouchers'));
+    const docData = { ...voucherData, userId, isUsed: false, createdAt: new Date().toISOString() };
+    tx.set(voucherRef, docData);
+    
+    // Update request
+    tx.update(reqRef, { 
+      status: 'approved', 
+      voucherId: voucherRef.id,
+      updatedAt: new Date().toISOString()
+    });
+    
+    // Deduct points
+    tx.update(userRef, {
+      rewardPoints: increment(-pointsCost)
+    });
+  });
+}
+
+export async function updateUserVoucher(id: string, data: Partial<UserVoucher>) {
+  await updateDoc(doc(db, 'user_vouchers', id), data as any);
+}
+
+export async function markVoucherAsUsed(voucherId: string, orderId: string) {
+  await updateDoc(doc(db, 'user_vouchers', voucherId), {
+    isUsed: true,
+    usedAt: new Date().toISOString(),
+    orderId: orderId
+  });
+}
+
+export async function getReferralSettings(): Promise<ReferralSettings> {
+  const snap = await getDoc(doc(db, 'config', 'referral'));
+  if (!snap.exists()) {
+    return { isActive: true, isReferredDiscountEnabled: true, defaultReferralDiscountPct: 10, defaultRewardPoints: 50 };
+  }
+  return snap.data() as ReferralSettings;
+}
+
+export async function updateReferralSettings(data: Partial<ReferralSettings>) {
+  const ref = doc(db, 'config', 'referral');
+  await setDoc(ref, data, { merge: true });
+}
+
+export async function getUserByReferralCode(code: string) {
+  const q = query(collection(db, 'users'), where('referralCode', '==', code.toUpperCase()));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() } as any;
+}
+
+export async function createReferral(data: Omit<Referral, 'id' | 'createdAt' | 'updatedAt'>) {
+  const ref = doc(collection(db, 'referrals'));
+  const docData = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  await setDoc(ref, docData);
+  return { id: ref.id, ...docData } as Referral;
+}
+
+/**
+ * Calculate referrer reward points for an order.
+ * Safe Formula:
+ * 1 point = per ৳25 net product value
+ * Net Product Value = Product subtotal minus all applied discounts (coupon, voucher, referral, etc.)
+ * Shipping fee is NOT included.
+ * Points are rounded down to flat integer (no decimals).
+ * Cap: Maximum 80 points per order.
+ */
+export function calculateReferrerRewardPoints(
+  subtotal: number,
+  discount: number,
+  items?: Array<{ price: number; discountPrice?: number; quantity: number; isClearance?: boolean }>
+): number {
+  let effectiveSubtotal = subtotal;
+
+  if (items && items.length > 0) {
+    const clearanceSubtotal = items
+      .filter(i => i?.isClearance)
+      .reduce((sum, i) => sum + ((i.discountPrice ?? i.price) * i.quantity), 0);
+    effectiveSubtotal = Math.max(0, subtotal - clearanceSubtotal);
+  }
+
+  const netProductValue = Math.max(0, effectiveSubtotal - discount);
+  const points = Math.floor(netProductValue / 25);
+  return Math.min(80, points);
+}
+
+export async function recordOrderReferral(
+  referrerId: string,
+  referredUserId: string,
+  referredUserEmail: string,
+  orderId: string,
+  earnedPoints: number
+) {
+  if (!referrerId || !referredUserId || !orderId) return;
+
+  try {
+    // Check if there is a pending referral record with an empty orderId (created at signup)
+    const qEmpty = query(
+      collection(db, 'referrals'),
+      where('referredUserId', '==', referredUserId),
+      where('status', '==', 'pending'),
+      where('orderId', '==', '')
+    );
+    const snapEmpty = await getDocs(qEmpty);
+
+    if (!snapEmpty.empty) {
+      const refDoc = snapEmpty.docs[0];
+      await updateDoc(refDoc.ref, {
+        referrerId,
+        orderId,
+        earnedPoints,
+        updatedAt: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Check if there is already a referral record for this exact orderId
+    const qOrder = query(
+      collection(db, 'referrals'),
+      where('orderId', '==', orderId)
+    );
+    const snapOrder = await getDocs(qOrder);
+    if (!snapOrder.empty) {
+      const refDoc = snapOrder.docs[0];
+      await updateDoc(refDoc.ref, {
+        referrerId,
+        earnedPoints,
+        updatedAt: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Otherwise, create a new referral record for this order
+    await createReferral({
+      referrerId,
+      referredUserId,
+      referredUserEmail: referredUserEmail || 'No Email',
+      status: 'pending',
+      orderId,
+      earnedPoints
+    });
+  } catch (err) {
+    console.error('Error in recordOrderReferral:', err);
+  }
+}
+
+export async function updatePendingReferral(referredUserId: string, orderId: string, earnedPoints: number) {
+  const q = query(collection(db, 'referrals'), where('referredUserId', '==', referredUserId), where('status', '==', 'pending'));
+  const snap = await getDocs(q);
+  if (!snap.empty) {
+    const refDoc = snap.docs[0];
+    await updateDoc(refDoc.ref, { orderId, earnedPoints, updatedAt: new Date().toISOString() });
+  }
+}
+
+
+export async function getReferralsByUser(userId: string) {
+  const q = query(collection(db, 'referrals'), where('referrerId', '==', userId), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Referral));
+}
+
+export async function getAllReferrals() {
+  const q = query(collection(db, 'referrals'), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Referral));
+}
+
+export async function createRewardRequest(data: Omit<RewardRequest, 'id' | 'createdAt' | 'updatedAt' | 'status'>) {
+  const ref = doc(collection(db, 'reward_requests'));
+  const docData = { ...data, status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  await setDoc(ref, docData);
+  return { id: ref.id, ...docData } as RewardRequest;
+}
+
+export async function getUserRewardRequests(userId: string) {
+  const q = query(collection(db, 'reward_requests'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as RewardRequest));
+}
+
+export async function getAllRewardRequests() {
+  const q = query(collection(db, 'reward_requests'), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as RewardRequest));
+}
+
+export async function updateRewardRequest(id: string, data: Partial<RewardRequest>) {
+  await updateDoc(doc(db, 'reward_requests', id), { ...data, updatedAt: new Date().toISOString() });
+}
+
+export async function processReferralReward(orderId: string, status: Order['orderStatus']) {
+  if (status !== 'delivered' && status !== 'cancelled' && status !== 'returned') return;
+
+  const q = query(collection(db, 'referrals'), where('orderId', '==', orderId), where('status', '==', 'pending'));
+  const snap = await getDocs(q);
+  if (snap.empty) return;
+
+  const referralDoc = snap.docs[0];
+  const referral = referralDoc.data() as Referral;
+  
+  if (status === 'delivered') {
+    await updateDoc(referralDoc.ref, { status: 'rewarded', updatedAt: new Date().toISOString() });
+    await updateDoc(doc(db, 'users', referral.referrerId), {
+      rewardPoints: increment(referral.earnedPoints),
+      totalEarnedPoints: increment(referral.earnedPoints),
+      totalReferrals: increment(1)
+    });
+  } else {
+    await updateDoc(referralDoc.ref, { status: 'cancelled', updatedAt: new Date().toISOString() });
+  }
+}

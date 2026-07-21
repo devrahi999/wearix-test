@@ -1,6 +1,15 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
+export const metadata: Metadata = {
+  title: 'Terms & Conditions | WearixBD',
+  description: 'Read the terms and conditions for using WearixBD shopping platform. Understand our policies on orders, returns, shipping and more.',
+  keywords: ['wearixbd terms', 'wearix bd terms and conditions'],
+  alternates: { canonical: 'https://wearixbd.store/terms' },
+};
+
 export default function TermsConditionsPage() {
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-6">
       <div className="border-b border-gray-150 pb-5">

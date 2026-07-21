@@ -41,7 +41,7 @@ export default function Footer() {
               <span className="text-2xl font-black text-gray-900 tracking-tight">{SITE_NAME}</span>
             </div>
             <p className="text-sm leading-relaxed">
-              Bangladesh&apos;s premium fashion destination. Quality clothing for the whole family.
+              Bangladesh's premium fashion destination. Quality clothing for the whole family.
             </p>
             <div className="flex gap-3">
               {settings?.facebook && (

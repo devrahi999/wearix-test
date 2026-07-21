@@ -1,4 +1,19 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'About Us | WearixBD',
+  description: 'Learn about WearixBD — Bangladesh\'s trusted online fashion destination for premium polo shirts, t-shirts, trousers and more. Quality fashion at affordable prices.',
+  keywords: ['wearixbd', 'wearix bd', 'wearix', 'about wearixbd', 'bangladesh fashion brand', 'online clothing bangladesh'],
+  alternates: { canonical: 'https://wearixbd.store/about' },
+  openGraph: {
+    title: 'About Us | WearixBD',
+    description: 'Learn about WearixBD — Bangladesh\'s trusted online fashion destination.',
+    url: 'https://wearixbd.store/about',
+  },
+};
+
 export default function AboutPage() {
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-6">
       <div className="border-b border-gray-150 pb-5">

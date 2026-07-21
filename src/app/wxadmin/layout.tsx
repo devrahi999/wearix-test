@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, ShoppingBag, FolderTree, ClipboardList, Users, Ticket,
-  Settings, LogOut, ChevronRight, Image as ImageIcon, Zap, Loader2, ShieldAlert, Menu, X, MessageSquare, Star, TrendingUp
+  Settings, LogOut, ChevronRight, Image as ImageIcon, Zap, Loader2, ShieldAlert, Menu, X, MessageSquare, Star, TrendingUp, Gift, UserPlus
 } from 'lucide-react';
 import { SITE_NAME } from '@/constants';
 import { useAuth } from '@/context/AuthContext';
@@ -37,6 +37,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Promo Boxes', href: '/wxadmin/promo', icon: Zap },
     { label: 'Marketing', href: '/wxadmin/marketing', icon: Ticket },
     { label: 'Coupons', href: '/wxadmin/coupons', icon: Ticket },
+    { label: 'Referral Program', href: '/wxadmin/referrals', icon: UserPlus },
+    { label: 'Reward Options', href: '/wxadmin/reward-options', icon: Gift },
+    { label: 'Reward Requests', href: '/wxadmin/reward-requests', icon: Gift },
     { label: 'SEO Health', href: '/wxadmin/seo', icon: ClipboardList },
     { label: 'Store Settings', href: '/wxadmin/settings', icon: Settings },
   ];
@@ -57,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <ShieldAlert className="w-16 h-16 text-red-400" />
         <h1 className="text-2xl font-bold text-gray-900">Access Denied</h1>
-        <p className="text-gray-500 text-sm">You don&apos;t have admin privileges.</p>
+        <p className="text-gray-500 text-sm">You don't have admin privileges.</p>
         <Link href="/" className="text-blue-600 font-bold text-sm hover:underline">← Back to site</Link>
       </div>
     );

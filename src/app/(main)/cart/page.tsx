@@ -43,7 +43,7 @@ function CartPageContent() {
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Your Cart is Empty</h1>
         <p className="text-gray-500 mt-2 max-w-sm mx-auto">
-          Looks like you haven&apos;t added any fashion apparel to your cart yet. Let&apos;s start shopping!
+          Looks like you haven't added any fashion apparel to your cart yet. Let's start shopping!
         </p>
         <Link
           href="/shop"

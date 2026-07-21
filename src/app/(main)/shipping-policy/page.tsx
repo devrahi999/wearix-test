@@ -1,7 +1,15 @@
+import type { Metadata } from 'next';
 import { formatPrice } from '@/lib/utils';
 import { SHIPPING_FEE } from '@/constants';
 
+export const metadata: Metadata = {
+  title: 'Shipping Policy | WearixBD',
+  description: 'WearixBD shipping policy — fast delivery across Bangladesh. Inside Dhaka delivery within 24-48 hours. Cash on Delivery available.',
+  alternates: { canonical: 'https://wearixbd.store/shipping-policy' },
+};
+
 export default function ShippingPolicyPage() {
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-6">
       <div className="border-b border-gray-150 pb-5">

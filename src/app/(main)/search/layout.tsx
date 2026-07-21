@@ -1,8 +1,8 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Shopping Cart | WearixBD',
-  description: 'Review your cart items and proceed to checkout. Cash on Delivery available across Bangladesh.',
+  title: 'Search | WearixBD',
+  description: 'Search for polo shirts, t-shirts, trousers and other premium fashion items at WearixBD.',
   robots: { index: false, follow: false },
 };
 

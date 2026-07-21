@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
+import { ConfirmProvider } from '@/components/ui/ConfirmDialog';
 import { Toaster } from 'react-hot-toast';
 import MetaPixel from '@/components/MetaPixel';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
@@ -24,7 +25,13 @@ export const metadata: Metadata = {
     template: `%s | WearixBD`,
   },
   description: 'Shop premium polo shirts, t-shirts, trousers, shirts and more at WearixBD. Cash on Delivery, Nationwide Delivery across Bangladesh.',
-  keywords: ['wearixbd', 'wearix', 'polo shirt bangladesh', "men's fashion bd", 'online clothing store bangladesh', 'premium t shirt bd'],
+  keywords: [
+    'wearixbd', 'wearix', 'wearix bd', 'wearixbd.store', 'wearix bangladesh',
+    'polo shirt bangladesh', 'buy polo shirt bd', 'online fashion store bd',
+    'premium tshirt bangladesh', 'jersey bangladesh online', 'buy clothes online bd',
+    'men fashion bangladesh', 'best clothing store bangladesh', 'cash on delivery clothes bd',
+    'hoodie bangladesh', 'panjabi online bd', 'pants online bangladesh',
+  ],
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
@@ -101,9 +108,11 @@ export default function RootLayout({
         <MetaPixel />
       </head>
       <body className={`${inter.variable} font-sans bg-gray-50 text-gray-900 selection:bg-blue-100`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ConfirmProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ConfirmProvider>
         <Toaster position="top-center" />
         <GoogleAnalytics />
       </body>

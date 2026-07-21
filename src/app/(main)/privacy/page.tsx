@@ -1,4 +1,13 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | WearixBD',
+  description: 'Read WearixBD\'s privacy policy to understand how we collect, use and protect your personal information when you shop with us.',
+  alternates: { canonical: 'https://wearixbd.store/privacy' },
+};
+
 export default function PrivacyPolicyPage() {
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-6">
       <div className="border-b border-gray-150 pb-5">

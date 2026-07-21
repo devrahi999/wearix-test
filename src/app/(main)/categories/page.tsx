@@ -31,7 +31,7 @@ export default function CategoriesPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">All Categories</h1>
         <p className="text-gray-500 text-sm mt-1.5">
-          {loading ? 'Loading...' : `${categories.length} categories`} • Find exactly what you&apos;re looking for
+          {loading ? 'Loading...' : `${categories.length} categories`} • Find exactly what you're looking for
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export default function CategoriesPage() {
       {/* Bottom CTA */}
       <div className="mt-12 rounded-3xl bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900 p-8 text-center text-white">
         <p className="text-blue-300 text-sm font-semibold uppercase tracking-wider mb-2">Explore Everything</p>
-        <h2 className="text-2xl font-bold mb-3">Can&apos;t find what you need?</h2>
+        <h2 className="text-2xl font-bold mb-3">Can't find what you need?</h2>
         <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">
           Browse our full shop to discover all products across every style and category.
         </p>

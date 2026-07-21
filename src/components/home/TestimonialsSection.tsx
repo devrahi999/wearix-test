@@ -63,7 +63,7 @@ export default function TestimonialsSection() {
                 />
               ))}
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed">&ldquo;{t.text}&rdquo;</p>
+            <p className="text-sm text-gray-600 leading-relaxed">"{t.text}"</p>
           </div>
         ))}
       </div>

@@ -37,9 +37,9 @@ function SearchForm() {
         <p className="text-sm text-gray-500 mt-1">
           {query ? (
             <>
-              Showing {searchResults.length} results for &ldquo;
+              Showing {searchResults.length} results for "
               <span className="font-semibold text-blue-600">{query}</span>
-              &rdquo;
+              "
             </>
           ) : (
             'Enter a search query to browse products'
@@ -55,7 +55,7 @@ function SearchForm() {
             <span className="text-4xl">🔍</span>
             <h3 className="text-lg font-bold text-gray-900 mt-4">No Results Found</h3>
             <p className="text-sm text-gray-500 mt-2">
-              We couldn&apos;t find any products matching your search term. Try looking for general categories like &ldquo;shirts&rdquo;, &ldquo;panjabi&rdquo;, or &ldquo;jersey&rdquo;.
+              We couldn't find any products matching your search term. Try looking for general categories like "shirts", "panjabi", or "jersey".
             </p>
             <Link
               href="/shop"

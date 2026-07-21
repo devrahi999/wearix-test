@@ -51,41 +51,39 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   return (
     <ConfirmContext.Provider value={{ confirm }}>
       {children}
-      {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm transition-all">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 text-center space-y-4">
-              <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center ${options.isDanger !== false ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  {options.title || 'Are you sure?'}
-                </h3>
-                <p className="text-sm text-gray-500 mt-2">
-                  {options.message}
-                </p>
-              </div>
+      <div className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden transition-all duration-300 transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+          <div className="p-6 text-center space-y-4">
+            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center ${options.isDanger !== false ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
+              <AlertCircle className="w-6 h-6" />
             </div>
-            <div className="flex gap-2 p-4 bg-gray-50/80 border-t border-gray-100">
-              <button
-                onClick={handleCancel}
-                className="flex-1 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
-              >
-                {options.cancelText || 'Cancel'}
-              </button>
-              <button
-                onClick={handleConfirm}
-                className={`flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-colors ${
-                  options.isDanger !== false ? 'bg-red-500 hover:bg-red-600 shadow-sm shadow-red-200' : 'bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200'
-                }`}
-              >
-                {options.confirmText || 'Confirm'}
-              </button>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">
+                {options.title || 'Are you sure?'}
+              </h3>
+              <p className="text-sm text-gray-500 mt-2">
+                {options.message}
+              </p>
             </div>
           </div>
+          <div className="flex gap-2 p-4 bg-gray-50/80 border-t border-gray-100">
+            <button
+              onClick={handleCancel}
+              className="flex-1 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+            >
+              {options.cancelText || 'Cancel'}
+            </button>
+            <button
+              onClick={handleConfirm}
+              className={`flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-colors ${
+                options.isDanger !== false ? 'bg-red-500 hover:bg-red-600 shadow-sm shadow-red-200' : 'bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200'
+              }`}
+            >
+              {options.confirmText || 'Confirm'}
+            </button>
+          </div>
         </div>
-      )}
+      </div>
     </ConfirmContext.Provider>
   );
 }

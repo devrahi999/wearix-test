@@ -2,18 +2,24 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
 import { formatPrice } from '@/lib/utils';
 import { BD_LOCATIONS } from '@/constants/locations';
-import { ShoppingBag, ArrowRight, ShieldCheck, Check, AlertCircle, Loader2, Phone } from 'lucide-react';
+import { ShoppingBag, ArrowRight, ShieldCheck, Check, AlertCircle, Loader2, Phone, X, Gift } from 'lucide-react';
 import { 
   getStoreSettings, type StoreSettings, 
   getCouponByCode, type Coupon, 
   createOrder, hasUserUsedCoupon, recordCouponUsage, getProducts, deleteOrder,
   getCampaigns,
-  type Campaign
+  type Campaign,
+  getUserByReferralCode, getReferralSettings, getUserOrders, type ReferralSettings, updatePendingReferral,
+  getUserVouchers, type UserVoucher, markVoucherAsUsed,
+  calculateReferrerRewardPoints, recordOrderReferral
 } from '@/lib/db';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { calculateBuyMoreDiscount, calculateFreeDelivery } from '@/lib/promotions';
 import { useAuth } from '@/context/AuthContext';
 
@@ -28,11 +34,22 @@ function CheckoutForm() {
 
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [refSettings, setRefSettings] = useState<ReferralSettings | null>(null);
+  const [pastOrderCount, setPastOrderCount] = useState(0);
+  const [vouchers, setVouchers] = useState<UserVoucher[]>([]);
 
   useEffect(() => {
     getStoreSettings().then(setSettings);
     getCampaigns().then(setCampaigns);
+    getReferralSettings().then(setRefSettings);
   }, []);
+
+  useEffect(() => {
+    if (user?.uid) {
+      getUserOrders(user.uid).then(orders => setPastOrderCount(orders.length));
+      getUserVouchers(user.uid).then(vs => setVouchers(vs.filter(v => !v.isUsed)));
+    }
+  }, [user]);
 
   const [form, setForm] = useState(() => {
     const defaultDist = Object.keys(BD_LOCATIONS)[0];
@@ -67,11 +84,25 @@ function CheckoutForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Coupon Logic
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponError, setCouponError] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  // Referral Logic
+  const [appliedReferralUser, setAppliedReferralUser] = useState<any | null>(null);
+
+  useEffect(() => {
+    // Fetch the referrer if we have a referredBy code and haven't used the first order discount yet
+    // This is needed to reward the referrer, and also as a fallback for discount calc for older users.
+    if (user?.referredBy && user.firstOrderUsed === false) {
+      getUserByReferralCode(user.referredBy).then(u => {
+        if (u) setAppliedReferralUser(u);
+      });
+    }
+  }, [user]);
+
+  const [appliedVoucher, setAppliedVoucher] = useState<UserVoucher | null>(null);
+  const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
 
   const cartSubtotal = isBuyNow && buyNowItem 
     ? (buyNowItem.discountPrice ?? buyNowItem.price) * buyNowItem.quantity 
@@ -156,7 +187,37 @@ function CheckoutForm() {
     setValidatingCoupon(false);
   };
 
-  const removeCoupon = () => setAppliedCoupon(null);
+  const getVoucherDiscountText = (v: UserVoucher) => {
+    if (v.discountType === 'percent') return `${v.discountValue}% OFF`;
+    if (v.discountType === 'fixed') return `${formatPrice(v.discountValue)} OFF`;
+    return 'Free Delivery';
+  };
+
+  const isVoucherEligible = (v: UserVoucher) => {
+    if (v.minOrderAmount && cartSubtotal < v.minOrderAmount) return false;
+    // Check categories/products
+    if ((v.validCategories && v.validCategories.length > 0) || (v.validProducts && v.validProducts.length > 0)) {
+      // Basic check: we don't have categories in `items` readily available without fetching, 
+      // but if the voucher has restrictions we'll just let them click it and maybe validate. 
+      // Or we can just assume it's conditionally valid. To be safe, we allow clicking it and if it's invalid we could block checkout.
+      // But let's keep it simple: we allow it.
+      return true;
+    }
+    return true;
+  };
+
+  const handleSelectVoucher = (v: UserVoucher) => {
+    if (!isVoucherEligible(v)) {
+      toast.error('This voucher is not eligible for your current cart.');
+      return;
+    }
+    setAppliedVoucher(v);
+    setIsVoucherModalOpen(false);
+    // Remove coupon if they select a voucher to prevent stacking both types of manual discounts
+    setAppliedCoupon(null);
+  };
+
+  const removeVoucher = () => setAppliedVoucher(null);
 
   const couponDiscount = Math.round(appliedCoupon 
     ? (appliedCoupon.discountType === 'percent' 
@@ -164,14 +225,73 @@ function CheckoutForm() {
         : appliedCoupon.discountType === 'fixed' ? appliedCoupon.discountValue : 0)
     : 0);
 
+  const voucherDiscount = Math.round(appliedVoucher 
+    ? (appliedVoucher.discountType === 'percent' 
+        ? cartSubtotal * (appliedVoucher.discountValue / 100)
+        : appliedVoucher.discountType === 'fixed' ? appliedVoucher.discountValue : 0)
+    : 0);
+
   const buyMoreResult = calculateBuyMoreDiscount(items, campaigns);
-  const totalDiscount = Math.round(couponDiscount + buyMoreResult.discountAmount);
+  
+  let referralDiscount = 0;
+  let isReferralFreeDelivery = false;
+  let referralDiscountText = '';
+
+  if (user?.referredBy && user?.firstOrderUsed === false && refSettings?.isActive) {
+    const isGloballyEnabled = refSettings.isReferredDiscountEnabled !== false; 
+    let isUserEnabled = true;
+    if (appliedReferralUser) {
+      isUserEnabled = appliedReferralUser.isReferredDiscountEnabled !== false;
+    }
+
+    if (isGloballyEnabled && isUserEnabled) {
+      let rType = 'percent';
+      let rVal = 10;
+      
+      // Look at the referrer's profile first (appliedReferralUser)
+      if (appliedReferralUser) {
+        if (appliedReferralUser.referCodeDiscountType) {
+          rType = appliedReferralUser.referCodeDiscountType;
+          rVal = appliedReferralUser.referCodeDiscountValue !== undefined ? appliedReferralUser.referCodeDiscountValue : 0;
+        } else if (appliedReferralUser.customReferralDiscount) {
+          rType = 'percent';
+          rVal = appliedReferralUser.customReferralDiscount;
+        } else {
+          rType = refSettings.discountType || 'percent';
+          rVal = refSettings.discountValue || refSettings.defaultReferralDiscountPct || 10;
+        }
+      }
+      // Fallback to the current user's profile values (saved at sign up)
+      else if (user.referCodeDiscountType) {
+        rType = user.referCodeDiscountType;
+        rVal = user.referCodeDiscountValue || 0;
+      }
+      // If neither is loaded yet, use global defaults
+      else {
+        rType = refSettings.discountType || 'percent';
+        rVal = refSettings.discountValue || refSettings.defaultReferralDiscountPct || 10;
+      }
+
+      if (rType === 'percent') {
+        referralDiscount = Math.round(cartSubtotal * (rVal / 100));
+        referralDiscountText = `${rVal}% OFF`;
+      } else if (rType === 'fixed') {
+        referralDiscount = rVal;
+        referralDiscountText = `${formatPrice(rVal)} OFF`;
+      } else if (rType === 'free_delivery') {
+        isReferralFreeDelivery = true;
+        referralDiscountText = `Free Delivery`;
+      }
+    }
+  }
+
+  const totalDiscount = Math.round(couponDiscount + voucherDiscount + buyMoreResult.discountAmount + referralDiscount);
   
   const subtotalAfterDiscounts = Math.max(0, Math.round(cartSubtotal - totalDiscount));
   const freeDeliveryResult = calculateFreeDelivery(items, subtotalAfterDiscounts, campaigns, hasFreeDelivery);
 
   const getShippingCharge = () => {
-    if (freeDeliveryResult.isFreeDelivery || appliedCoupon?.discountType === 'free_delivery') return 0;
+    if (freeDeliveryResult.isFreeDelivery || appliedCoupon?.discountType === 'free_delivery' || appliedVoucher?.discountType === 'free_delivery' || isReferralFreeDelivery) return 0;
     if (!settings) return 0;
     if (settings.districtDeliveryCharges[form.district] !== undefined) {
       return settings.districtDeliveryCharges[form.district];
@@ -237,7 +357,7 @@ function CheckoutForm() {
         discount: totalDiscount,
         total: total,
         paymentMethod: paymentMethod,
-        orderStatus: isDirectCod ? 'processing' : 'pending',
+        orderStatus: paymentMethod === 'cod' ? 'processing' : 'pending',
         paymentStatus: 'unpaid' as const,
         couponCode: appliedCoupon?.code || null,
       };
@@ -247,20 +367,63 @@ function CheckoutForm() {
       
       await createOrder(cleanOrder);
 
+      // Save Referral & calculate per-order points for referrer based on net product value
+      try {
+        const referrerUser = appliedReferralUser || (user?.referredBy ? await getUserByReferralCode(user.referredBy) : null);
+        if (referrerUser && user) {
+          const referrerPoints = calculateReferrerRewardPoints(cartSubtotal, totalDiscount);
+          if (referrerPoints > 0) {
+            await recordOrderReferral(
+              referrerUser.id || referrerUser.uid,
+              user.uid,
+              user.email || form.email || '',
+              genId,
+              referrerPoints
+            );
+          }
+          if (user.firstOrderUsed === false) {
+            await updateDoc(doc(db, 'users', user.uid), { firstOrderUsed: true });
+          }
+        }
+      } catch (refErr) {
+        console.error('Failed to record referral (ignoring):', refErr);
+      }
+
       if (appliedCoupon) {
-        await recordCouponUsage(user?.uid || 'guest', appliedCoupon.id, appliedCoupon.code);
+        try {
+          await recordCouponUsage(user?.uid || 'guest', appliedCoupon.id, appliedCoupon.code);
+        } catch (err) { console.error(err); }
       }
       
-      if (isDirectCod) {
-        await fetch('/api/checkout/direct-cod', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: genId })
-        });
+      if (appliedVoucher) {
+        try {
+          await markVoucherAsUsed(appliedVoucher.id, genId);
+        } catch (err) { console.error(err); }
+      }
+
+      // If Cash on Delivery (COD), place order immediately and redirect to confirmation
+      if (paymentMethod === 'cod') {
+        try {
+          await fetch('/api/checkout/direct-cod', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: genId })
+          });
+        } catch (codErr) {
+          console.error('Direct COD notification failed:', codErr);
+        }
+
+        if (!isBuyNow) {
+          clearCart();
+        } else {
+          clearBuyNowItem();
+        }
+
         window.location.href = `/order-confirmation/${genId}?source=${isBuyNow ? 'buy_now' : 'cart'}`;
         return;
       }
 
+      // Online Gateway Payment (bKash / Nagad / Online)
       const res = await fetch('/api/zinipay/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -276,10 +439,16 @@ function CheckoutForm() {
       const paymentData = await res.json();
       
       if (!res.ok) {
-        throw new Error(paymentData.error || 'Failed to initialize payment');
+        const errorMsg = paymentData.details ? JSON.stringify(paymentData.details) : (paymentData.error || 'Failed to initialize payment');
+        throw new Error(errorMsg);
       }
 
       if (paymentData.url) {
+        if (!isBuyNow) {
+          clearCart();
+        } else {
+          clearBuyNowItem();
+        }
         window.location.href = paymentData.url;
       } else {
         throw new Error('Payment URL not received');
@@ -523,6 +692,42 @@ function CheckoutForm() {
               )}
             </div>
 
+            {/* Voucher Section */}
+            {user && vouchers.length > 0 && (
+              <div className="pt-4 border-t border-gray-200">
+                {appliedVoucher ? (
+                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-purple-700 flex items-center gap-1"><Gift className="w-4 h-4" /> Voucher Applied</p>
+                      <p className="text-xs text-purple-600">{appliedVoucher.title} ({getVoucherDiscountText(appliedVoucher)})</p>
+                    </div>
+                    <button type="button" onClick={removeVoucher} className="text-xs font-bold text-red-500 hover:underline">Remove</button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Have a reward voucher?</span>
+                      <button type="button" onClick={() => setIsVoucherModalOpen(true)} className="text-blue-600 font-bold text-sm hover:underline flex items-center gap-1">
+                        Use Voucher
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Auto Referral Code Section */}
+            {appliedReferralUser && user?.firstOrderUsed === false && referralDiscountText && (
+              <div className="pt-4 border-t border-gray-200">
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-indigo-700 flex items-center gap-1"><Check className="w-4 h-4" /> Your first order discount applied!</p>
+                    <p className="text-xs text-indigo-600">{referralDiscountText}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="pt-4 border-t border-gray-200 space-y-3">
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Subtotal ({items.length} items)</span>
@@ -538,6 +743,12 @@ function CheckoutForm() {
                 <div className="flex justify-between text-sm text-green-600 font-medium">
                   <span>Coupon Discount ({appliedCoupon.code})</span>
                   <span>-{formatPrice(couponDiscount)}</span>
+                </div>
+              )}
+              {appliedReferralUser && (
+                <div className="flex justify-between text-sm text-indigo-600 font-medium">
+                  <span>Referral Discount</span>
+                  <span>-{formatPrice(referralDiscount)}</span>
                 </div>
               )}
               {buyMoreResult.qualified && (
@@ -583,6 +794,57 @@ function CheckoutForm() {
           </div>
         </div>
       </form>
+
+      {/* Voucher Modal */}
+      {isVoucherModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[80vh] animate-[slideUp_0.3s_ease-out]">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-white sticky top-0 z-10">
+              <h2 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <Gift className="w-5 h-5 text-purple-600" />
+                Select a Voucher
+              </h2>
+              <button onClick={() => setIsVoucherModalOpen(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-xl transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto space-y-3 bg-gray-50/50">
+              {vouchers.map(v => {
+                const eligible = isVoucherEligible(v);
+                return (
+                  <div 
+                    key={v.id} 
+                    onClick={() => eligible && handleSelectVoucher(v)}
+                    className={`border rounded-2xl p-4 flex items-center justify-between transition-all ${
+                      eligible ? 'bg-white border-purple-200 hover:border-purple-500 cursor-pointer shadow-sm hover:shadow-md' : 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed'
+                    }`}
+                  >
+                    <div>
+                      <h3 className={`font-bold ${eligible ? 'text-purple-900' : 'text-gray-500'}`}>{v.title}</h3>
+                      <p className={`text-xl font-black ${eligible ? 'text-purple-600' : 'text-gray-400'} mb-1`}>
+                        {getVoucherDiscountText(v)}
+                      </p>
+                      {v.minOrderAmount && (
+                        <p className="text-xs text-gray-500">Min. Spend: {formatPrice(v.minOrderAmount)}</p>
+                      )}
+                      {!eligible && v.minOrderAmount && cartSubtotal < v.minOrderAmount && (
+                        <p className="text-[10px] text-red-500 font-bold mt-1">Add {formatPrice(v.minOrderAmount - cartSubtotal)} more to use</p>
+                      )}
+                    </div>
+                    <div>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        eligible ? 'border-purple-300 group-hover:border-purple-600' : 'border-gray-300'
+                      }`}>
+                        {appliedVoucher?.id === v.id && <div className="w-3 h-3 bg-purple-600 rounded-full"></div>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

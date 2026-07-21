@@ -8,6 +8,13 @@ export interface User {
   avatar?: string;
   role: UserRole;
   createdAt: string;
+  referralCode?: string;
+  referredBy?: string;
+  rewardPoints?: number;
+  totalReferrals?: number;
+  totalEarnedPoints?: number;
+  customReferralDiscount?: number;
+  isReferredDiscountEnabled?: boolean;
 }
 
 export interface Address {

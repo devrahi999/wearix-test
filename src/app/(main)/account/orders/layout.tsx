@@ -1,8 +1,8 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Shopping Cart | WearixBD',
-  description: 'Review your cart items and proceed to checkout. Cash on Delivery available across Bangladesh.',
+  title: 'My Orders | WearixBD',
+  description: 'Track and manage your WearixBD orders.',
   robots: { index: false, follow: false },
 };
 

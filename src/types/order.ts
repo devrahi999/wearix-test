@@ -1,11 +1,12 @@
 export type PaymentMethod = 'bkash' | 'nagad' | 'sslcommerz' | 'cod' | 'online';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'unpaid' | 'delivery_charge_paid';
-export type OrderStatus = 'pending' | 'placed' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'placed' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
 
 export interface OrderItem {
   productId: string;
   productName: string;
   productImage: string;
+  slug?: string;
   size: string;
   color?: string;
   basePrice?: number;
