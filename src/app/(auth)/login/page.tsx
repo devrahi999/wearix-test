@@ -181,7 +181,7 @@ function AuthForm() {
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {mode === 'login' && (loading ? 'Signing in...' : 'Sign In')}
-              {mode === 'register' && (loading ? 'Creating account...' : 'Create Account')}
+
               {mode === 'forgot' && (loading ? 'Sending...' : 'Send Reset Link')}
             </button>
           </form>
