@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAllRewardRequests, updateRewardRequest, processRewardApproval, getCategories, getUser, updateUser, type RewardRequest, type Category } from '@/lib/db';
+import { getAllRewardRequests, updateRewardRequest, processRewardApproval, getCategories, getUser, updateUser, type RewardRequest } from '@/lib/db';
+import type { Category } from '@/types/product';
 import { Gift, CheckCircle2, XCircle, Clock, Loader2, X, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
